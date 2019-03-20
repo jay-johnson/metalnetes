@@ -1,0 +1,12 @@
+manage_resolv_conf: true
+resolv_conf:
+    nameservers: ['DNS_SERVER', '8.8.4.4', '8.8.8.8']
+    searchdomains:
+        - SEARCH_DOMAIN
+    domain: SEARCH_DOMAIN
+    options:
+        rotate: false
+        timeout: 1
+ntp:
+  enabled: true
+  ntp_client: chrony  # Uses cloud-init default chrony configuration

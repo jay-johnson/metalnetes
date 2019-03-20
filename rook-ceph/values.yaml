@@ -1,0 +1,16 @@
+image:
+  prefix: rook
+  repository: rook/ceph
+  tag: master
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+rbacEnable: true
+pspEnable: true

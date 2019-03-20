@@ -1,0 +1,50 @@
+;
+$TTL    604800
+@   IN  SOA example.com. root.example.com. (
+                20      ; Serial
+            604800      ; Refresh
+            86400       ; Retry
+            2419200     ; Expire
+            604800 )    ; Negative Cache TTL
+;
+;@  IN  NS  localhost.
+;1.0.0  IN  PTR localhost.
+
+;Name Server Information
+        IN      NS     ns1.example.com.
+;Reverse lookup for Name Server
+100     IN      PTR    ns1.example.com.
+;PTR Record IP address to HostName
+100     IN      PTR    home1.example.com.
+100     IN      PTR    example.com
+101     IN      PTR    master1.example.com.
+102     IN      PTR    master2.example.com.
+103     IN      PTR    master3.example.com.
+101     IN      PTR    api.example.com.
+101     IN      PTR    mail.example.com.
+101     IN      PTR    ceph.example.com.
+101     IN      PTR    minio.example.com.
+101     IN      PTR    aeminio.example.com.
+101     IN      PTR    s3.example.com.
+101     IN      PTR    pgadmin.example.com.
+101     IN      PTR    www.example.com.
+102     IN      PTR    api.example.com.
+102     IN      PTR    jupyter.example.com.
+102     IN      PTR    aejupyter.example.com.
+102     IN      PTR    aeprometheus.example.com.
+102     IN      PTR    grafana.example.com.
+102     IN      PTR    sajupyter.example.com.
+103     IN      PTR    splunk.example.com.
+240     IN      PTR    bastion.example.com
+
+
+104     IN      PTR    c1.example.com
+105     IN      PTR    c2.example.com
+106     IN      PTR    c3.example.com
+
+107     IN      PTR    m4.example.com
+108     IN      PTR    m5.example.com
+109     IN      PTR    m6.example.com
+110     IN      PTR    m10.example.com
+111     IN      PTR    m11.example.com
+112     IN      PTR    m12.example.com

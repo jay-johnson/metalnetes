@@ -1,0 +1,56 @@
+;
+$TTL	604800
+@	IN	SOA	example.com. root.example.com. (
+                20		; Serial
+            604800		; Refresh
+            86400		; Retry
+            2419200		; Expire
+            604800 )	; Negative Cache TTL
+;
+;@	IN	NS	localhost.
+;@	IN	A	127.0.0.1
+;@	IN	AAAA	::1
+
+;Name Server Information
+        IN      NS      ns1.example.com.
+;IP address of Name Server
+ns1     IN       A      192.168.0.100
+home1   IN       A      192.168.0.100
+
+;Mail Exchanger
+example.com.   IN     MX   10   mail.example.com.
+
+;A - Record HostName To Ip Address
+@       IN       A      192.168.0.101
+master1 IN       A      192.168.0.101
+master2 IN       A      192.168.0.102
+master3 IN       A      192.168.0.103
+api     IN       A      192.168.0.101
+ceph    IN       A      192.168.0.101
+mail    IN       A      192.168.0.101
+minio   IN       A      192.168.0.101
+aeminio IN       A      192.168.0.101
+pgadmin IN       A      192.168.0.101
+s3      IN       A      192.168.0.101
+www     IN       A      192.168.0.101
+api     IN       A      192.168.0.102
+jupyter IN       A      192.168.0.102
+aejupyter IN     A      192.168.0.102
+aeprometheus IN  A      192.168.0.102
+grafana IN       A      192.168.0.102
+sajupyter IN     A      192.168.0.102
+splunk  IN       A      192.168.0.103
+
+c1      IN       A      192.168.0.104
+c2      IN       A      192.168.0.105
+c3      IN       A      192.168.0.106
+
+m4      IN       A      192.168.0.107
+m5      IN       A      192.168.0.108
+m6      IN       A      192.168.0.109
+m10     IN       A      192.168.0.110
+m11     IN       A      192.168.0.111
+m12     IN       A      192.168.0.112
+
+; Bastion server
+bastion IN       A      192.168.0.240
