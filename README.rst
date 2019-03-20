@@ -11,9 +11,9 @@ This will install:
 - Rook Ceph Storage Cluster for Persistent Volumes
 - Grafana + Prometheus
 - Optional - Stock Analysis Engine that includes:
-  - Minio (on-premise S3)
-  - Redis cluster
-  - Jupyter
+    - Minio (on-premise S3)
+    - Redis cluster
+    - Jupyter
 - SSH access
 
 Getting Started
