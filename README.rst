@@ -301,3 +301,4 @@ Restart the cluster if you see an error like this when looking at the ``rook-cep
 
     ./clean.sh
     ./deploy-rook-ceph.sh
+
