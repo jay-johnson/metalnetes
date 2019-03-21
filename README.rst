@@ -159,23 +159,23 @@ Now that the VMs are ready you can use the `k8.env CLUSTER_CONFIG example file <
 VM and Kubernetes Node Configuration
 ------------------------------------
 
-- `VM names, Cluster Nodes, Node Labels, Cluster Tools section <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__
+- `VM names, Cluster Nodes, Node Labels, Cluster Tools section <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L129-L227>`__
 
 Helm and Tiller Configuration
 -----------------------------
 
-- `Helm and Tiller <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__
+- `Helm and Tiller <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L81-L88>`__
 
 Cluster Storage Configuation
 ----------------------------
 
-- `Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__
-- `Additional Block Devices per VM <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__
+- `Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L90-L98>`__
+- `Additional Block Devices per VM <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L211-L221>`__
 
 Private Docker Registry
 -----------------------
 
-- `Registry <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__
+- `Registry <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L68-L79>`__
 
 Start Kubernetes Cluster
 ========================
@@ -220,20 +220,17 @@ If you want to reboot vms and have the nodes re-join and rebuild the kubernetes 
 
     ./join.sh
 
-(Optional Validation) - Deploy Stock Analysis Engine
-====================================================
+Deployment Tools
+================
 
-This repository was created after trying to decouple my `AI kubernetes cluster for analyzing network traffic <https://github.com/jay-johnson/deploy-to-kubernetes>`__ and my `Stock Analysis Engine (ae) that uses many deep neural networks to predict future stock prices during live-trading hours <https://github.com/AlgoTraders/stock-analysis-engine>`__ from using the same kubernetes cluster. Additionally with the speed ae is moving, I am looking to keep exploring more high availablity solutions and configurations to ensure the intraday data collection never dies (hopefully out of the box too!).
+Nginx Ingress
+-------------
 
-Deploy AE
----------
+Deploy `the nginx ingress <https://github.com/nginxinc/kubernetes-ingress/>`__
 
 ::
 
-    ./deploy-ae.sh
-
-Deployment Tools
-================
+    ./deploy-nginx.sh
 
 Rook-Ceph
 ---------
@@ -276,6 +273,20 @@ Deploy tiller:
 ::
 
     ./deploy-tiller.sh
+
+(Optional Validation) - Deploy Stock Analysis Engine
+====================================================
+
+This repository was created after trying to decouple my `AI kubernetes cluster for analyzing network traffic <https://github.com/jay-johnson/deploy-to-kubernetes>`__ and my `Stock Analysis Engine (ae) that uses many deep neural networks to predict future stock prices during live-trading hours <https://github.com/AlgoTraders/stock-analysis-engine>`__ from using the same kubernetes cluster. Additionally with the speed ae is moving, I am looking to keep trying new high availablity solutions and configurations to ensure the intraday data collection never dies (hopefully out of the box too!).
+
+Deploy AE
+---------
+
+- `Configure AE <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L100-L122>`__
+
+::
+
+    ./deploy-ae.sh
 
 Delete Cluster VMs
 ==================
