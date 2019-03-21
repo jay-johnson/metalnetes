@@ -70,7 +70,7 @@ Changing Between Kubernetes Clusters
 
 If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``prod_k8.env`` then you can then quickly toggle between clusters using:
 
-#.  Load ``dev`` Cluster Config file: ``k8.env``
+#.  Load ``dev`` Cluster Config file
 
     ::
 
@@ -82,7 +82,7 @@ If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``p
 
         metal
 
-#.  Load ``prod`` Cluster Config file: ``k8.env``
+#.  Load ``prod`` Cluster Config file
 
     ::
 
