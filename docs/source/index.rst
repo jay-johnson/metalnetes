@@ -48,8 +48,8 @@ Monitoring the Kubernetes Cluster
 
 Log in to Grafana from a browser:
 
-Username: **trex**
-Password: **123321**
+- Username: **trex**
+- Password: **123321**
 
 https://grafana.example.com
 
@@ -73,14 +73,27 @@ View Redis Cluster in Grafana
 Changing Between Kubernetes Clusters
 ====================================
 
-#.  Load another Cluster Config file: ``k8.env``
+If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``prod_k8.env`` then you can then quickly toggle between clusters using:
+
+#.  Load ``dev`` Cluster Config file: ``k8.env``
 
     ::
 
-        source some_new_k8.env
+        source dev_k8.env
 
+#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the ``dev`` cluster and local host
 
-#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the cluster and local host
+    ::
+
+        metal
+
+#.  Load ``prod`` Cluster Config file: ``k8.env``
+
+    ::
+
+        source prod_k8.env
+
+#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the ``prod`` cluster and local host
 
     ::
 
@@ -89,7 +102,7 @@ Changing Between Kubernetes Clusters
 Customize VMs and Manage Kubernetes Deployments
 ===============================================
 
-These are the steps the automated ``./boot-new-cluster.sh`` runs in order for customizing and debugging your kubernetes deployment.
+These are the steps the automated ``./boot.sh`` runs in order for customizing and debugging your kubernetes deployment.
 
 Create VMs Using KVM on Ubuntu
 ==============================

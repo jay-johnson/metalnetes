@@ -97,7 +97,7 @@ If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``p
 Customize VMs and Manage Kubernetes Deployments
 ===============================================
 
-These are the steps the automated ``./boot-new-cluster.sh`` runs in order for customizing and debugging your kubernetes deployment.
+These are the steps the automated ``./boot.sh`` runs in order for customizing and debugging your kubernetes deployment.
 
 Create VMs Using KVM on Ubuntu
 ==============================
