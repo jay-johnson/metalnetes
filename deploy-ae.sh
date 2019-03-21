@@ -17,19 +17,21 @@ fi
 source ${path_to_env}
 export CLUSTER_CONFIG=${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 env_name="${K8_ENV}"
-use_repo="${USE_REPO}"
+use_repo="${REPO_BASE_DIR}"
 debug="${METAL_DEBUG}"
 namespace="ae"
 start_registry="${START_REGISTRY}"
 registry_secret="${REGISTRY_SECRET}"
 
-# Start the Stock Analysis Engine on reboot
+# Start the Stock Analysis Engine
 # https://github.com/AlgoTraders/stock-analysis-engine
-ae_starter="${cur_dir}/ae/start.sh"
-ae_values="${cur_dir}/${AE_VALUES}"
-ae_deploy_dir="./ae"
-use_repo="${USE_REPO}"
+ae_helm_deploy_tool="${AE_HELM_DEPLOY_TOOL}"
+ae_values="${AE_VALUES}"
+ae_deploy_dir="${AE_DEPLOY_DIR}"
 
 anmt "----------------------------------------"
 anmt "deploying ae to ${env_name} with KUBECONFIG=${KUBECONFIG}"
@@ -62,11 +64,11 @@ else
 fi
 
 anmt "starting ae on ${env_name} with:"
-anmt "${ae_starter} ${ae_deploy_dir} ${KUBECONFIG}"
+anmt "${ae_helm_deploy_tool} ${ae_deploy_dir} ${KUBECONFIG}"
 cd ${ae_deploy_dir}
-${ae_starter} ${ae_deploy_dir} ${KUBECONFIG}
+${ae_helm_deploy_tool} ${ae_deploy_dir} ${KUBECONFIG}
 if [[ "$?" != "0" ]]; then
-    err "failed to run ae starter: ${ae_starter} ${ae_deploy_dir} ${KUBECONFIG}"
+    err "failed to run ae starter: ${ae_helm_deploy_tool} ${ae_deploy_dir} ${KUBECONFIG}"
     cd ${cur_dir}
     exit 1
 fi

@@ -19,6 +19,9 @@ source ${path_to_env}
 # export for additional bash scripts to use later
 export CLUSTER_CONFIG=${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # this assumes the current user has root ssh access to the following hosts:
 initial_master="${K8_INITIAL_MASTER}"
 secondary_nodes="${K8_SECONDARY_MASTERS}"
@@ -57,13 +60,12 @@ start_storage="${START_STORAGE}"
 storage_type="${STORAGE_TYPE}"
 storage_starter="${STORAGE_STARTER}"
 
-# Start the Stock Analysis Engine on reboot
+# Start the Stock Analysis Engine
 # https://github.com/AlgoTraders/stock-analysis-engine
+# disable with: export START_AE=0
 start_ae="${START_AE}"
 ae_values="${AE_VALUES}"
 ae_starter="${AE_STARTER}"
-
-start_docker_compose_in_repo="${USE_REPO}"
 
 if [[ "${start_clean}" == "1" ]]; then
     start_registry=1
@@ -102,7 +104,40 @@ anmt "helm=${start_helm}"
 anmt "ae=${start_ae}"
 anmt "storage=${storage_type} starter=${storage_starter}"
 anmt "only_join=${only_join}"
+anmt "current_dir=${cur_dir}"
+anmt "vm_k8_config_dir=${k8_config_dir}"
+anmt "vm_k8_tools_dir=${k8_tools_dir}"
 anmt "-----------------------------"
+
+if [[ ! -e ${helm_starter} ]]; then
+    err "please run ./boot.sh from the base directory of the repository"
+    err "currently in: $(pwd)"
+    exit 1
+fi
+
+inf ""
+if [[ ! -e ${k8_config_dir} ]]; then
+    anmt "creating local k8_config_dir: ${k8_config_dir}"
+    mkdir -p -m 775 ${k8_config_dir}
+    if [[ "$?" != "0" ]]; then
+        err "failed to create k8_config_dir ${k8_config_dir} locally with:"
+        err "mkdir -p -m 775 ${k8_config_dir}"
+        err "please confirm your user has permissions to create the directory:"
+        ls -lrt $(dirname ${k8_config_dir})
+        exit 1
+    fi
+fi
+if [[ ! -e ${k8_tools_dir} ]]; then
+    mkdir -p -m 775 ${k8_tools_dir}
+    anmt "creating local k8_tools_dir: ${k8_tools_dir}"
+    if [[ "$?" != "0" ]]; then
+        err "failed to create k8_tools_dir ${k8_tools_dir} locally with:"
+        err "mkdir -p -m 775 ${k8_tools_dir}"
+        err "please confirm your user has permissions to create the directory:"
+        ls -lrt $(dirname ${k8_tools_dir})
+        exit 1
+    fi
+fi
 
 anmt "$(date) - starting ${env_name} vms: ${vms} with: ${k8_vm_start}"
 ${k8_vm_start}
@@ -139,12 +174,6 @@ if [[ "${no_sleep}" != "0" ]]; then
 fi
 
 anmt "$(date) - installing ${env_name} kubernetes cluster ${initial_master}:/etc/kubernetes/admin.conf to $(hostname):${KUBECONFIG} using ssh key: ${k8_ssh_key}"
-if [[ ! -e ${k8_config_dir} ]]; then
-    mkdir -p -m 775 ${k8_config_dir}
-fi
-if [[ ! -e ${k8_tools_dir} ]]; then
-    mkdir -p -m 775 ${k8_tools_dir}
-fi
 scp -q -i ${k8_ssh_key} ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}
 exit_code_getting_an_existing_cluster_admin_config=$?
 need_to_clean="0"

@@ -16,9 +16,9 @@ This will install:
 - Rook Ceph Storage Cluster for Persistent Volumes
 - Grafana + Prometheus
 - Optional - Stock Analysis Engine that includes:
-  - Minio (on-premise S3)
-  - Redis cluster
-  - Jupyter
+    - Minio (on-premise S3)
+    - Redis cluster
+    - Jupyter
 - SSH access
 
 Getting Started
@@ -69,6 +69,22 @@ View Redis Cluster in Grafana
 -----------------------------
 
 .. image:: https://i.imgur.com/kegYzXZ.png
+
+Changing Between Kubernetes Clusters
+====================================
+
+#.  Load another Cluster Config file: ``k8.env``
+
+    ::
+
+        source some_new_k8.env
+
+
+#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the cluster and local host
+
+    ::
+
+        metal
 
 Customize VMs and Manage Kubernetes Deployments
 ===============================================

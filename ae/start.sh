@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# show dates on all logs
+export USE_SHOW_DATES=1
+
 cur_dir=$(pwd)
 path_to_env="${cur_dir}/k8.env"
 if [[ "${CLUSTER_CONFIG}" != "" ]]; then
@@ -17,38 +20,32 @@ fi
 source ${path_to_env}
 
 namespace="ae"
-ae_deploy_dir="./ae"
+ae_deploy_dir="${AE_DEPLOY_DIR}"
+env_name="${K8_ENV}"
 
 if [[ "${1}" != "" ]]; then
     ae_deploy_dir=${1}
 fi
-if [[ "${2}" != "" ]]; then
-    if [[ ! -e ${2} ]]; then
-        err "Failed to find KUBECONFIG=${2}"
-        exit 1
-    fi
-    export KUBECONFIG=${2}
-fi
 
 storage_type="${STORAGE_TYPE}"
-redis="./redis/values.yaml"
-minio="./minio/values.yaml"
-ae="./ae/values.yaml"
-jupyter="./ae-jupyter/values.yaml"
-set_storage="./set-storage-class.sh"
-build_helm_charts="./build.sh"
-ae_job_runner="./cron/run-job.sh"
-ae_job_restore_logs="./logs-job-restore.sh"
-ae_describe_engine="./describe-engine.sh"
-ae_logs_engine="./logs-engine.sh"
-ae_install_tls_secret="./install-tls.sh"
-ae_view_ticker_data_in_redis="./view-ticker-data-in-redis.sh"
-ae_monitor_start="./monitor-start.sh"
+redis="${ae_deploy_dir}/redis/values.yaml"
+minio="${ae_deploy_dir}/minio/values.yaml"
+ae="${ae_deploy_dir}/ae/values.yaml"
+jupyter="${ae_deploy_dir}/ae-jupyter/values.yaml"
+set_storage="${ae_deploy_dir}/set-storage-class.sh"
+build_helm_charts="${ae_deploy_dir}/build.sh"
+ae_job_runner="${ae_deploy_dir}/cron/run-job.sh"
+ae_job_restore_logs="${ae_deploy_dir}/logs-job-restore.sh"
+ae_describe_engine="${ae_deploy_dir}/describe-engine.sh"
+ae_logs_engine="${ae_deploy_dir}/logs-engine.sh"
+ae_install_tls_secret="${ae_deploy_dir}/install-tls.sh"
+ae_view_ticker_data_in_redis="${ae_deploy_dir}/view-ticker-data-in-redis.sh"
+ae_monitor_start="${ae_deploy_dir}/monitor-start.sh"
 
 if [[ ! -e ${ae} ]]; then
     cd ${ae_deploy_dir}
     if [[ ! -e ${ae} ]]; then
-        err "${env_name} - unable to find path to ${ae} helm values file"
+        err "${env_name} - unable to find path to ae core in deploy_dir=${ae_deploy_dir} with helm values file: ${ae}"
         exit 1
     fi
 fi
@@ -103,10 +100,8 @@ if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-# anmt "sleeping for 10 seconds before deploying"
-# sleep 10
-
 anmt "${env_name} - building charts: ${build_helm_charts}"
+cd $(dirname ${build_helm_charts})
 ${build_helm_charts}
 if [[ "$?" != "0" ]]; then
     err "${env_name} - failed setting building charts with: ${build_helm_charts}"
@@ -198,48 +193,74 @@ echo ""
 anmt "${env_name} - checking running charts:"
 helm ls
 
-anmt "${env_name} - getting pods in ae namespace:"
+anmt "${env_name} - getting pods in ae namespace before starting sleeps:"
 kubectl get pods -n ae
 
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 180 more seconds before running restore job"
-sleep 30
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 150 more seconds before running restore job"
-sleep 30
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 120 more seconds before running restore job"
-sleep 30
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 90 more seconds before running restore job"
-sleep 30
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 60 more seconds before running restore job"
-sleep 30
-anmt "${env_name} - getting pods"
-kubectl get -n ${namespace} po
-anmt "${env_name} - sleeping for 30 more seconds before running restore job"
-sleep 30
+max_sleep_cycles=30
+sleep_seconds_per_cycle=30
+total_cycle_sleeps=0
+not_done=1
+already_running=$(kubectl get pods -n ae | grep -i -E "running|completed" | grep -v NAME | wc -l)
+if [[ "${already_running}" -gt 5 ]]; then
+    not_done=0
+fi
+while [[ "${not_done}" == "1" ]]; do
+    anmt "$(date) - ${env_name} - sleeping for ${sleep_seconds_per_cycle} more seconds before checking ae pods"
+    sleep ${sleep_seconds_per_cycle}
+    still_downloading=$(kubectl get pods -n ae | grep -i -E "init|containercreating" | grep -v NAME | wc -l)
+    if [[ "${still_downloading}" != "0" ]]; then
+        echo "$(date) - ${env_name} - still waiting for pods to download and start: "
+        kubectl get pods -n ae
+        inf ""
+        (( total_cycle_sleeps++ ))
+        if [[ ${total_cycle_sleeps} -gt ${max_sleep_cycles} ]]; then
+            err "$(date) - ${env_name} - failed to download ae pods in a timely manner after waiting (${max_sleep_cycles} * ${sleep_seconds_per_cycle}) - stopping for now - total_cycles=${total_cycle_sleeps} > max=${max_sleep_cycles}"
+            exit 1
+        fi
+    else
+        found_issues=$(kubectl get pods -n ae | grep -vi -E "running|completed" | grep -v NAME | wc -l)
+        if [[ "${found_issues}" != "0" ]]; then
+            warn "$(date) - ${env_name} - detected possible deployment issue - please review this error to take corrective action or see if it cleans up automatically:"
+            kubectl get pods -n ae 
+            warn "$(date) - ${env_name} - please note: while this is in active development it is easier to uninstall then reinstall if the problem continues with:"
+            err "repo_base/ae/_uninstall.sh"
+            warn "if you are ok with deleting the redis data you need to manually delete it with:"
+            err "kubectl delete -n ae pvc redis-data-ae-redis-master-0"
+            warn "then start the cluster with:"
+            err "repo_base/deploy-ae.sh"
+            inf ""
+        else
+            not_done="0"
+        fi
+    fi
+done
 
-anmt "${env_name} - restoring latest pricing data from S3 to Redis with helm ae-restore chart: ${ae_job_runner} restore ${KUBECONFIG} ${ae_deploy_dir}"
-${ae_job_runner} restore ${KUBECONFIG} ${ae_deploy_dir}
-if [[ "$?" != "0" ]]; then
-    err "${env_name} - failed running job: restore ${KUBECONFIG} ${ae_deploy_dir}"
-    cd ${cur_dir}
+anmt "${env_name} - checking for pod errors"
+found_error=$(kubectl get pods -n ae | grep -vi -E "running|completed" | grep -v NAME | wc -l)
+if [[ "${found_error}" != "0" ]]; then
+    err "failed to start ae pods:"
+    kubectl get pods -n ae
     exit 1
+else
+    good "${env_name} - ae pods done ContainerCreating and no detected errors"
+    kubectl get pods -n ae
 fi
 
-anmt "sleeping for 10 seconds before checking ae-restore job"
-sleep 10
+if [[ "${AE_RESTORE_ON_STARTUP}" == "1" ]]; then
+    anmt "${env_name} - restoring latest pricing data from S3 to Redis with helm ae-restore chart: ${ae_job_runner} restore ${KUBECONFIG} ${ae_deploy_dir}"
+    ${ae_job_runner} restore ${KUBECONFIG} ${ae_deploy_dir}
+    if [[ "$?" != "0" ]]; then
+        err "${env_name} - failed running job: restore ${KUBECONFIG} ${ae_deploy_dir}"
+        cd ${cur_dir}
+        exit 1
+    fi
 
-anmt "${env_name} - checking restore logs:"
-${ae_job_restore_logs}
+    anmt "sleeping for 10 seconds before checking ae-restore job"
+    sleep 10
 
+    anmt "${env_name} - checking restore logs:"
+    ${ae_job_restore_logs}
+fi
 
 anmt "${env_name} - getting kubernetes ae pods:"
 kubectl get pods -n ${namespace}

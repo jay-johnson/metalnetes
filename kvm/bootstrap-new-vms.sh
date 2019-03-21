@@ -16,6 +16,9 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # this assumes the current user has root ssh access to the following hosts:
 initial_master="${K8_INITIAL_MASTER}"
 secondary_nodes="${K8_SECONDARY_MASTERS}"

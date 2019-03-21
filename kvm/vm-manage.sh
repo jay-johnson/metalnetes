@@ -16,6 +16,9 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # Credit to all the awesomeness at:
 # https://github.com/giovtorres/kvm-install-vm/blob/master/kvm-install-vm
 

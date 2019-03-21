@@ -16,9 +16,12 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 user=${K8_VM_USER}
-inf "anmt installing kvm and arp-scan for finding vm ip addresses"
-apt install sshpass qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager arp-scan
+inf "anmt installing s3cmd, sshpass, kvm and arp-scan for finding vm ip addresses"
+apt install s3cmd sshpass qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager arp-scan
 
 nic_name=$(ifconfig | grep -E "enp|ens" | sed -e 's/:/ /g' | awk '{print $1}' | head -1)
 

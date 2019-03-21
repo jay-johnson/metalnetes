@@ -17,6 +17,9 @@ fi
 source ${path_to_env}
 export CLUSTER_CONFIG=${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # you can change these vars in the CLUSTER_CONFIG
 env_name="${K8_ENV}"
 nodes="${K8_NODES}"
@@ -25,16 +28,22 @@ ips="${K8_VM_IPS}"
 macs="${K8_VM_MACS}"
 num_k8_nodes_expected=$(echo "${nodes}" | sed -e 's/ /\n/g' | wc -l)
 
-use_path="$(dirname ${path_to_env})"
 start_time="$(date)"
 end_time=""
 
-install_kvm_and_arp="${use_path}/kvm/install-kvm.sh"
-start_vms="${use_path}/kvm/start-cluster-vms.sh"
-find_vms_on_bridge="${use_path}/kvm/find-vms-on-bridge.sh"
-bootstrap_vms="${use_path}/kvm/bootstrap-new-vms.sh"
-setup_vms="${use_path}/install-centos-vms.sh"
-start_tool="${use_path}/start.sh"
+# assume current directory is the repo's base dir
+install_kvm_and_arp="${REPO_BASE_DIR}/kvm/install-kvm.sh"
+start_vms="${REPO_BASE_DIR}/kvm/start-cluster-vms.sh"
+find_vms_on_bridge="${REPO_BASE_DIR}/kvm/find-vms-on-bridge.sh"
+bootstrap_vms="${REPO_BASE_DIR}/kvm/bootstrap-new-vms.sh"
+setup_vms="${REPO_BASE_DIR}/install-centos-vms.sh"
+start_tool="${REPO_BASE_DIR}/start.sh"
+
+if [[ ! -e ${install_kvm_and_arp} ]]; then
+    err "please run ./boot.sh from the base directory of the repository"
+    err "currently in: $(pwd)"
+    exit 1
+fi
 
 anmt "----------------------------------------"
 anmt "booting new ${env_name} VMs with kubernetes cluster using CLUSTER_CONFIG=${CLUSTER_CONFIG} with KUBECONFIG=${KUBECONFIG}"
@@ -141,7 +150,7 @@ anmt "export KUBECONFIG=${KUBECONFIG}"
 inf ""
 anmt "Add to your ~/.bashrc as an alias:"
 inf ""
-anmt "echo 'alias kdev=\"export KUBECONFIG=${KUBECONFIG}\"' >> ~/.bashrc"
+anmt "echo 'alias k${env_name}=\"export KUBECONFIG=${KUBECONFIG}\"' >> ~/.bashrc"
 inf ""
 
 exit 0

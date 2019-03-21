@@ -16,6 +16,9 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # requires having kvm installed
 
 # usage: ./multihost/kvm/create-centos-vm.sh m1 /data/kvm/m1.qcow2

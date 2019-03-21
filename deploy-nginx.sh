@@ -16,8 +16,11 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 env_name="${K8_ENV}"
-use_repo="${USE_REPO}"
+use_repo="${REPO_BASE_DIR}"
 debug="${METAL_DEBUG}"
 
 tool_nginx_starter="$(dirname ${path_to_env})/nginx/run.sh"

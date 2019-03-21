@@ -16,6 +16,9 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 initial_master="${K8_INITIAL_MASTER}"
 secondary_nodes="${K8_SECONDARY_MASTERS}"
 nodes="${initial_master} ${secondary_nodes}"

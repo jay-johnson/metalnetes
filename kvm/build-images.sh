@@ -16,6 +16,8 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
 
 disk_1_name="${VM_DISK_1_NAME}"
 disk_1_size="${VM_DISK_1_SIZE}"

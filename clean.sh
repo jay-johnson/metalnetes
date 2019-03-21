@@ -17,6 +17,9 @@ fi
 source ${path_to_env}
 export CLUSTER_CONFIG=${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 # this assumes the current user has root ssh access to the following hosts:
 initial_master="${K8_INITIAL_MASTER}"
 secondary_nodes="${K8_SECONDARY_MASTERS}"
@@ -194,17 +197,17 @@ done
 inf ""
 
 anmt "copying kubernetes config to local using: scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}"
-scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}
+scp -q ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}
 inf ""
 
 for i in ${nodes}; do
     anmt "installing kubernetes config on ${i} using: scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${login_user}@${i}:${KUBECONFIG}"
-    scp ${KUBECONFIG} ${login_user}@${i}:${KUBECONFIG}
+    scp -q ${KUBECONFIG} ${login_user}@${i}:${KUBECONFIG}
     if [[ "$?" != "0" ]]; then
         err "${env_name}:${i} failed deploying KUBECONFIG to ${KUBECONFIG}"
         exit 1
     fi
-    scp ${KUBECONFIG} ${login_user}@${i}:/etc/kubernetes/admin.conf
+    scp -q ${KUBECONFIG} ${login_user}@${i}:/etc/kubernetes/admin.conf
     if [[ "$?" != "0" ]]; then
         err "${env_name}:${i} failed deploying KUBECONFIG to /etc/kubernetes/admin.conf"
         exit 1
@@ -219,15 +222,27 @@ if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-anmt "copying kubernetes config locally: scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}"
-scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}
+# deploy the KUBECONFIG to the K8_CONFIG_DIR on all nodes
+# includes directory creation if not found
+# use the bash function 'metal' to toggle between multiple
+# clusters using different k8.env files
+anmt "deploying ${env_name}:${path_to_env} with bash-supported deploy function: metal"
+metal
+
+# shutdown if metal install failed
 if [[ "$?" != "0" ]]; then
     err "${env_name} - failed to copy ${KUBECONFIG} locally"
     exit 1
 fi
+if [[ ! -e ${KUBECONFIG} ]]; then
+    err "${env_name} - failed to find newly created ${KUBECONFIG} locally"
+    err "tried to copy the config with: scp ${login_user}@${initial_master}:/etc/kubernetes/admin.conf ${KUBECONFIG}"
+    exit 1
+fi
 inf ""
 
-sleep 60
+anmt "${env_name} - sleeping to let the cluster nodes join with new KUBECONFIG=${KUBECONFIG}"
+slp 60
 
 if [[ -e ${tool_node_labeler} ]]; then
     anmt "applying ${env_name} labels using command: ${tool_node_labeler} ${use_labels}"

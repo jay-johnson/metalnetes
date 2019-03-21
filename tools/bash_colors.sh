@@ -1,4 +1,13 @@
-# include dates with 1 otherwise no dates
+# activate logging to a file by:
+# export LOG_FILE=<PATH_TO_CUSTOM_LOG_FILE>
+
+# disable logging to stdout with:
+# export HIDE_LOGS="1"
+export SHOW_LOGS="1"
+if [[ "${HIDE_LOGS}" == "1" ]]; then
+    export SHOW_LOGS="0"
+fi
+# include datetime stamp per log by setting as "1" otherwise no dates
 export USE_SHOW_DATES=0
 if [[ "${SHOW_DATES}" == "1" ]]; then
     export USE_SHOW_DATES=1
@@ -38,11 +47,23 @@ get_date() {
 anmt() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;227m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;227m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;227m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;227m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;227m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;227m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -52,11 +73,23 @@ anmt() {
 warn() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;208m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;208m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;208m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;208m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;208m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;208m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -66,11 +99,23 @@ warn() {
 dbg() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;240m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -80,11 +125,23 @@ dbg() {
 ign() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;240m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;240m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -94,11 +151,23 @@ ign() {
 good() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;46m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;46m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;46m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;046m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;046m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;046m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -108,11 +177,23 @@ good() {
 green() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;048m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;048m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;048m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;048m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;048m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;048m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -131,28 +212,26 @@ inf() {
     fi
 }
 
-lg() {
-    if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
-        if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;256m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
-        else
-            printf "\x1b[38;5;256m%s\e[0m " "${@}"
-            printf "\n"
-        fi
-    else
-        echo "$(get_date) $@"
-    fi
-}
- 
 err() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[38;5;196m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;196m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;196m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[38;5;196m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[38;5;196m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[38;5;196m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
@@ -162,15 +241,31 @@ err() {
 critical() {
     if [[ "${COLORS_SUPPORTED}" == "1" ]]; then
         if [[ "${USE_SHOW_DATES}" == "1" ]]; then
-            printf "\x1b[48;5;196m%s\e[0m " "$(get_date) ${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[48;5;196m%s\e[0m " "$(get_date) ${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[48;5;196m%s\e[0m " "$(get_date) ${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         else
-            printf "\x1b[48;5;196m%s\e[0m " "${@}"
-            printf "\n"
+            if [[ "${SHOW_LOGS}" == "1" ]]; then
+                printf "\x1b[48;5;196m%s\e[0m " "${@}"
+                printf "\n"
+            fi
+            if [[ "${LOG_FILE}" != "" ]] && [[ -e "${LOG_FILE}" ]]; then
+                printf "\x1b[48;5;196m%s\e[0m " "${@}" >> ${LOG_FILE}
+                printf "\n" >> ${LOG_FILE}
+            fi
         fi
     else
         echo "$(get_date) $@"
     fi
+}
+ 
+crit() {
+    critical $@
 }
  
 # log any non-empty message as an error

@@ -43,8 +43,8 @@ Monitoring the Kubernetes Cluster
 
 Log in to Grafana from a browser:
 
-Username: **trex**
-Password: **123321**
+- Username: **trex**
+- Password: **123321**
 
 https://grafana.example.com
 
@@ -64,6 +64,35 @@ View Redis Cluster in Grafana
 -----------------------------
 
 .. image:: https://i.imgur.com/kegYzXZ.png
+
+Changing Between Kubernetes Clusters
+====================================
+
+If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``prod_k8.env`` then you can then quickly toggle between clusters using:
+
+#.  Load ``dev`` Cluster Config file: ``k8.env``
+
+    ::
+
+        source dev_k8.env
+
+#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the ``dev`` cluster and local host
+
+    ::
+
+        metal
+
+#.  Load ``prod`` Cluster Config file: ``k8.env``
+
+    ::
+
+        source prod_k8.env
+
+#.  Use the ``metal`` bash function to sync the ``KUBECONFIG`` through the ``prod`` cluster and local host
+
+    ::
+
+        metal
 
 Customize VMs and Manage Kubernetes Deployments
 ===============================================

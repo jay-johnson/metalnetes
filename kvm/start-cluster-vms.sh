@@ -16,6 +16,9 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+# defined in the CLUSTER_CONFIG
+start_logger
+
 env_name="${K8_ENV}"
 nodes="${K8_NODES}"
 vms="${K8_VMS}"
