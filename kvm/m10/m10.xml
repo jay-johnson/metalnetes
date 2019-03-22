@@ -1,6 +1,6 @@
-<domain type='kvm' id='157'>
+<domain type='kvm' id='160'>
   <name>m10</name>
-  <uuid>b693fc33-7f33-4704-b103-ca896df58649</uuid>
+  <uuid>b0215558-9f0b-4208-bbf9-24b6f9253480</uuid>
   <memory unit='KiB'>17367040</memory>
   <currentMemory unit='KiB'>17367040</currentMemory>
   <vcpu placement='static'>4</vcpu>
@@ -112,7 +112,7 @@
       <alias name='serial0'/>
     </console>
     <channel type='unix'>
-      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-157-m10/org.qemu.guest_agent.0'/>
+      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-160-m10/org.qemu.guest_agent.0'/>
       <target type='virtio' name='org.qemu.guest_agent.0' state='connected'/>
       <alias name='channel0'/>
       <address type='virtio-serial' controller='0' bus='0' port='1'/>

@@ -29,15 +29,11 @@ api     IN       A      192.168.0.101
 ceph    IN       A      192.168.0.101
 mail    IN       A      192.168.0.101
 minio   IN       A      192.168.0.101
-aeminio IN       A      192.168.0.101
 pgadmin IN       A      192.168.0.101
 s3      IN       A      192.168.0.101
 www     IN       A      192.168.0.101
 api     IN       A      192.168.0.102
 jupyter IN       A      192.168.0.102
-aejupyter IN     A      192.168.0.102
-aeprometheus IN  A      192.168.0.102
-grafana IN       A      192.168.0.102
 sajupyter IN     A      192.168.0.102
 splunk  IN       A      192.168.0.103
 
@@ -45,12 +41,29 @@ c1      IN       A      192.168.0.104
 c2      IN       A      192.168.0.105
 c3      IN       A      192.168.0.106
 
-m4      IN       A      192.168.0.107
-m5      IN       A      192.168.0.108
-m6      IN       A      192.168.0.109
-m10     IN       A      192.168.0.110
-m11     IN       A      192.168.0.111
-m12     IN       A      192.168.0.112
+; metalnetes k8.env default dev cluster:
+m10     IN           A      192.168.0.110
+m11     IN           A      192.168.0.111
+m12     IN           A      192.168.0.112
+aeminio IN           A      192.168.0.112
+aejupyter IN         A      192.168.0.112
+aeprometheus IN      A      192.168.0.112
+grafana IN           A      192.168.0.112
 
-; Bastion server
-bastion IN       A      192.168.0.240
+; metal - dev
+m13     IN           A      192.168.0.113
+m14     IN           A      192.168.0.114
+m15     IN           A      192.168.0.115
+dev-grafana IN       A      192.168.0.114
+dev-aeminio IN       A      192.168.0.114
+dev-aejupyter IN     A      192.168.0.114
+dev-aeprometheus IN  A      192.168.0.114
+
+; metal - prod
+m16     IN           A      192.168.0.116
+m17     IN           A      192.168.0.117
+m18     IN           A      192.168.0.118
+prod-grafana IN      A      192.168.0.117
+prod-aeminio IN      A      192.168.0.117
+prod-aejupyter IN    A      192.168.0.117
+prod-aeprometheus IN A      192.168.0.117

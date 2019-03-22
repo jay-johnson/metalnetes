@@ -62,7 +62,7 @@ sys.path.insert(
 setup(
     name='metalnetes',
     cmdclass={'build_py': build_py},
-    version='1.0.5',
+    version='1.0.6',
     description=(
         'Tools for managing multiple kubernetes clusters on KVM '
         '(on 3 Centos 7 vms) running on a bare metal server '

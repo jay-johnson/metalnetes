@@ -688,7 +688,7 @@ server:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: datascience
+              - key: monitoring
                 operator: In
                 values:
                 - enabled

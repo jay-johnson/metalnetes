@@ -137,7 +137,7 @@ Create VMs Using KVM on Ubuntu
 
 #.  Bootstap Nodes
 
-    Once the vm's are routable by their fqdn (e.g. ``m10.example.com``), you can use the bootstrap tool to start preparing the cluster nodes, confirm ssh access works with all nodes.
+    Once the vm's are routable by their fqdn (e.g. ``m10.example.com``), you can use the bootstrap tool to start preparing the cluster nodes. This also confirms each vm works with automated ssh access.
 
     ::
 
@@ -288,6 +288,45 @@ Deploy AE
 
     ./deploy-ae.sh
 
+Redeploying Using Helm
+----------------------
+
+#.  Find the Helm Chart to Remove (this example uses ``ae-grafana``):
+
+    ::
+
+        helm ls ae-grafana
+
+#.  Delete and Purge the Helm Chart Deployment:
+
+    ::
+
+        helm delete --purge ae-grafana
+
+#.  Deploy AE Helm Charts:
+
+    ::
+
+        ./ae/start.sh
+
+Uninstall AE
+------------
+
+::
+
+    ./ae/_uninstall.sh
+
+Please wait for the Persistent Volume Claims to be deleted
+
+::
+
+    kubetl get pvc -n ae
+
+.. note:: The redis pvc ``redis-data-ae-redis-master-0`` requires being manually deleted
+    ::
+
+        kubectl -n ae delete pvc redis-data-ae-redis-master-0
+
 Delete Cluster VMs
 ==================
 
@@ -342,3 +381,26 @@ Restart the cluster if you see an error like this when looking at the ``rook-cep
     ./clean.sh
     ./deploy-rook-ceph.sh
 
+Helm fails with connection refused
+----------------------------------
+
+If you see this:
+
+::
+
+    metalnetes$ helm ls
+    Error: Get http://localhost:8080/api/v1/namespaces/kube-system/pods?labelSelector=app%3Dhelm%2Cname%3Dtiller: dial tcp 127.0.0.1:8080: connect: connection refused
+
+Source the ``k8.env`` Cluster Config file:
+
+::
+
+    metalnetes$ source k8.env
+    metalnetes$ helm ls
+    NAME         	REVISION	UPDATED                 	STATUS  	CHART           	APP VERSION	NAMESPACE
+    ae           	1       	Thu Mar 21 05:49:38 2019	DEPLOYED	ae-0.0.1        	0.0.1      	ae
+    ae-grafana   	1       	Thu Mar 21 05:57:17 2019	DEPLOYED	grafana-2.2.0   	6.0.0      	ae
+    ae-jupyter   	1       	Thu Mar 21 05:49:43 2019	DEPLOYED	ae-jupyter-0.0.1	0.0.1      	ae
+    ae-minio     	1       	Thu Mar 21 05:49:40 2019	DEPLOYED	minio-2.4.7     	2019-02-12 	ae
+    ae-prometheus	1       	Thu Mar 21 05:57:16 2019	DEPLOYED	prometheus-8.9.0	2.8.0      	ae
+    ae-redis     	1       	Thu Mar 21 05:49:42 2019	DEPLOYED	redis-6.4.2     	4.0.14     	ae
