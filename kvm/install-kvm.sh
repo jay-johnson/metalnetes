@@ -25,12 +25,17 @@ apt install s3cmd sshpass qemu-kvm libvirt-clients libvirt-daemon-system bridge-
 
 nic_name=$(ifconfig | grep -E "enp|ens" | sed -e 's/:/ /g' | awk '{print $1}' | head -1)
 
-echo "" >> /etc/network/interfaces
-echo "auto br0" >> /etc/network/interfaces
-echo "iface br0 inet dhcp" >> /etc/network/interfaces
-echo "      bridge_ports ${nic_name}" >> /etc/network/interfaces
-echo "      bridge_stp off" >> /etc/network/interfaces
-echo "      bridge_maxwait 0" >> /etc/network/interfaces
+if [[ -e /etc/network/interfaces ]]; then
+    test_exists=$(cat /etc/network/interfaces | grep br0 | wc -l)
+    if [[ "${test_exists}" == "0" ]]; then
+        echo "" >> /etc/network/interfaces
+        echo "auto br0" >> /etc/network/interfaces
+        echo "iface br0 inet dhcp" >> /etc/network/interfaces
+        echo "      bridge_ports ${nic_name}" >> /etc/network/interfaces
+        echo "      bridge_stp off" >> /etc/network/interfaces
+        echo "      bridge_maxwait 0" >> /etc/network/interfaces
+    fi
+fi
 
 anmt "adding user: ${user} to libvirt and libvirt-qemu"
 adduser ${user} libvirt
