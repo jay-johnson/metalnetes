@@ -164,23 +164,29 @@ Now that the VMs are ready you can use the `k8.env CLUSTER_CONFIG example file <
 VM and Kubernetes Node Configuration
 ------------------------------------
 
-- `VM names, Cluster Nodes, Node Labels, Cluster Tools section <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L129-L227>`__
+- `VM names, Cluster Nodes, Node Labels, Cluster Tools section <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L96-L194>`__
 
 Helm and Tiller Configuration
 -----------------------------
 
-- `Helm and Tiller <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L81-L88>`__
+- `Helm and Tiller <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L48-L55>`__
 
 Cluster Storage Configuation
 ----------------------------
 
-- `Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L90-L98>`__
-- `Additional Block Devices per VM <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L211-L221>`__
+- `Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L57-L65>`__
+- `Additional Block Devices per VM <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L178-L188>`__
 
 Private Docker Registry
 -----------------------
 
-- `Registry <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L68-L79>`__
+Please export the address to your private docker registy before deploying with format:
+
+::
+
+    export DOCKER_REGISTRY_FQDN=REGISTRY_HOST:PORT
+
+- `Registry <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L35-L46>`__
 
 Start Kubernetes Cluster
 ========================
@@ -287,7 +293,7 @@ This repository was created after trying to decouple my `AI kubernetes cluster f
 Deploy AE
 ---------
 
-- `Configure AE <https://github.com/jay-johnson/metalnetes/blob/b6b75e4be277c11ca510712e60649f171ff4551f/k8.env#L100-L122>`__
+- `Configure AE <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L67-L89>`__
 
 ::
 
@@ -321,7 +327,7 @@ Uninstall AE
 
     ./ae/_uninstall.sh
 
-Please wait for the Persistent Volume Claims to be Deleted
+Please wait for the Persistent Volume Claims to be deleted
 
 ::
 
