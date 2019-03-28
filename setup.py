@@ -62,11 +62,11 @@ sys.path.insert(
 setup(
     name='metalnetes',
     cmdclass={'build_py': build_py},
-    version='1.0.10',
+    version='1.0.11',
     description=(
         'Tools for managing multiple Kubernetes clusters on KVM '
-        '(on 3 Centos 7 vms) running on a bare metal server '
-        'on Fedora 29 (Ubuntu 18.04 was tested until Kubernetes v1.13.4)'
+        '(on 3 Centos 7 VMs) running on a bare metal Fedora 29 server '
+        '(Ubuntu 18.04 was tested until Kubernetes v1.14)'
         ''),
     long_description=long_description,
     author='Jay Johnson',

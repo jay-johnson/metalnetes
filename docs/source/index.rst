@@ -6,7 +6,7 @@
 Metalnetes
 ==========
 
-Tools for managing multiple Kubernetes **1.14** clusters on KVM (3 CentOS 7 VM) running on a bare metal server running Fedora 29 (also tested on Ubuntu 18.04 until 1.13). Use this repo if you want to create, destroy and manage native Kubernetes clusters. It is a full installer for taking a brand new server up to speed using just bash and environment variables.
+Tools for managing multiple Kubernetes **1.14** clusters on KVM (3 CentOS 7 VMs) running on a bare metal Fedora 29 server (also tested on Ubuntu 18.04 until 1.13). Use this repo if you want to create, destroy and manage native Kubernetes clusters. It is a full installer for taking a brand new server up to speed using just bash and environment variables.
 
 .. image:: https://i.imgur.com/awLwim1.png
 
