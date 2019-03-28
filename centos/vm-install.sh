@@ -17,6 +17,7 @@ nodes="${K8_NODES}"
 k8_config_dir="${K8_CONFIG_DIR}"
 k8_dns_server_1="${K8_DNS_SERVER_1}"
 k8_domain="${K8_DOMAIN}"
+install_go_tool="${REMOTE_TOOL_INSTALL_GO}"
 
 user=$(whoami)
 if [[ "${user}" != "root" ]]; then
@@ -34,7 +35,7 @@ required_kernel_modules="ip_vs ip_vs_rr ip_vs_wrr ip_vs_sh nf_conntrack_ipv4"
 
 test_old_docker_installed=$(rpm -qa | grep docker | grep -vi docker-ce | grep -vi docker-ee | wc -l)
 if [[ "${test_old_docker_installed}" != "0" ]]; then
-    warn "uninstalling previous docker versions"
+    warn "$(date) - ${env_name}:$(hostname) - uninstalling previous docker versions"
     yum -y remove docker \
         docker-client \
         docker-client-latest \
@@ -52,13 +53,14 @@ if [[ "${test_old_docker_installed}" != "0" ]]; then
     fi
 fi
 
-inf "updating repositories"
+inf "$(date) - ${env_name}:$(hostname) - updating repositories"
 yum update -y
 
-inf "installing rpms"
+inf "$(date) - ${env_name}:$(hostname) - installing rpms"
 yum install -y \
     autoconf \
     automake \
+    bind-utils \
     binutils \
     boost \
     boost-devel \
@@ -121,20 +123,20 @@ yum install -y \
     xauth \
 && yum clean all
 
-inf "installing yum-utils, device mapper and lvm2"
+inf "$(date) - ${env_name}:$(hostname) - installing yum-utils, device mapper and lvm2"
 yum install -y yum-utils \
     device-mapper-persistent-data \
     lvm2
 
-inf "enabling multipath support"
+inf "$(date) - ${env_name}:$(hostname) - enabling multipath support"
 /sbin/mpathconf --enable
 
-inf "adding centos docker-ce repo"
+inf "$(date) - ${env_name}:$(hostname) - adding centos docker-ce repo"
 yum-config-manager \
     --add-repo \
     https://download.docker.com/linux/centos/docker-ce.repo
 
-inf "installing docker-ce"
+inf "$(date) - ${env_name}:$(hostname) - installing docker-ce"
 yum install -y docker-ce
 
 if [[ "${custom_user}" != "0" ]]; then
@@ -149,26 +151,26 @@ fi
 if [[ -e ${service_file} ]]; then
     is_diff=$(diff ${service_file} /usr/lib/systemd/system/docker.service | wc -l)
     if [[ "${is_diff}" == "1" ]]; then
-        inf "installing docker service file: cp ${service_file} /usr/lib/systemd/system/docker.service"
+        inf "$(date) - ${env_name}:$(hostname) - installing docker service file: cp ${service_file} /usr/lib/systemd/system/docker.service"
         cp ${service_file} /usr/lib/systemd/system/docker.service
-        inf "reloading - systemctl daemon-reload"
+        inf "$(date) - ${env_name}:$(hostname) - reloading - systemctl daemon-reload"
         systemctl daemon-reload
     fi
 else
-    warn "Missing CentOS docker service file: ${service_file} to /usr/lib/systemd/system/docker.service"
+    warn "$(date) - ${env_name}:$(hostname) - Missing CentOS docker service file: ${service_file} to /usr/lib/systemd/system/docker.service"
 fi
 
 if [[ -e ${kernel_modules_file} ]]; then
-    inf "installing kernel modules: cp -f ${kernel_modules_file} /etc/modules-load.d/ip_vs.conf"
+    inf "$(date) - ${env_name}:$(hostname) - installing kernel modules: cp -f ${kernel_modules_file} /etc/modules-load.d/ip_vs.conf"
     cp -f ${kernel_modules_file} /etc/modules-load.d/ip_vs.conf
 else
-    warn "Missing CentOS kernel modules file: ${kernel_modules_file} for installing to /etc/modules-load.d/ip_vs.conf"
+    warn "$(date) - ${env_name}:$(hostname) - Missing CentOS kernel modules file: ${kernel_modules_file} for installing to /etc/modules-load.d/ip_vs.conf"
 fi
 
 test_exists=$(which go | wc -l)
 if [[ "${test_exists}" == "0" ]]; then
-    inf "installing go"
-    ${k8_config_dir}/install-go.sh
+    inf "$(date) - ${env_name}:$(hostname) - installing go: ${install_go_tool}"
+    ${install_go_tool}
 fi
 
 # to check the loaded kernel modules, use
@@ -176,24 +178,24 @@ anmt "${env_name}:$(hostname) - Checking CentOS kernel modules: ${required_kerne
 for i in ${required_kernel_modules}; do
     test_exists=$(lsmod | grep ${i} | wc -l)
     if [[ "${test_exists}" == "0" ]]; then
-        inf " - kernel module: ${i} is installed:"
+        inf "$(date) - ${env_name}:$(hostname) - kernel module: ${i} is installed:"
         modprobe -- ${i}
         test_exists=$(lsmod | grep ${i} | wc -l)
         if [[ "${test_exists}" == "0" ]]; then
-            err "Failed loading required kube-proxy kernel module: ${i}"
-            err "please ensure this host supports the required kernel modules for kube-proxy: https://github.com/kubernetes/kubernetes/tree/master/pkg/proxy/ipvs"
+            err "$(date) - ${env_name}:$(hostname) - Failed loading required kube-proxy kernel module: ${i}"
+            err "$(date) - ${env_name}:$(hostname) - please ensure this host supports the required kernel modules for kube-proxy: https://github.com/kubernetes/kubernetes/tree/master/pkg/proxy/ipvs"
             exit 1
         fi
     else
-        inf " - kernel module already loaded: ${i}"
+        inf "$(date) - ${env_name}:$(hostname) -  - kernel module already loaded: ${i}"
     fi
 done
 
 test_running=$(systemctl status docker | grep "Active: active" | wc -l)
 if [[ "${test_running}" == "0" ]]; then
-    inf "starting docker" 
+    inf "$(date) - ${env_name}:$(hostname) - starting docker"
     systemctl start docker
-    inf "enabling docker to start on reboot" 
+    inf "$(date) - ${env_name}:$(hostname) - enabling docker to start on reboot"
     systemctl enable docker
 fi
 

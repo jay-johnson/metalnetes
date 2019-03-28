@@ -1,0 +1,6 @@
+{
+  "insecure-registries": [
+    "192.168.0.100:5000",
+    "home1.example.com:5000"
+  ]
+}

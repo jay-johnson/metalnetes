@@ -24,17 +24,25 @@ nodes="${K8_NODES}"
 vms="${K8_VMS}"
 tools_dir="$(dirname ${path_to_env})"
 vm_manage="${tools_dir}/kvm/vm-manage.sh"
-vm_cloud_init="${tools_dir}/kvm/cloud-init-script.sh"
 vm_build_network_env="${tools_dir}/kvm/find-vms-on-bridge.sh"
+base_image="${KVM_BASE_IMAGE_PATH}"
+ssh_install_tool="${KVM_SSH_INSTALL_TOOL}"
+
+using_base="0"
+
+export BOOT_MODE="import-base"
+
+if [[ "${os_type}" == "fc" ]]; then
+    export LIBVIRT_DEFAULT_URI="qemu:///system"
+fi
+
+if [[ -e ${base_image} ]]; then
+    using_base="1"
+fi
 
 anmt "----------------------------------------------"
-anmt "${env_name} - building kubernetes vms=${vms} with fqdns=${nodes} KUBECONFIG=${KUBECONFIG} and manage tool: ${vm_manage}"
+anmt "${env_name} - building kubernetes vms=${vms} with fqdns=${nodes} KUBECONFIG=${KUBECONFIG} and base=${using_base} image=${base_image} with manage tool: ${vm_manage}"
 inf ""
-
-if [[ "$(whoami)" == "root" ]]; then
-    echo "please run as root to build the disks using qemu"
-    exit 1
-fi
 
 if [[ ! -e ${KVM_IMAGES_DIR} ]]; then
     mkdir -p -m 775 ${KVM_IMAGES_DIR}
@@ -84,7 +92,7 @@ for vm in $vms; do
         anmt "${env_name}:${vm} - creating ${vm_type} vm=${vm_num} with ${vm_manage}"
         anmt "${vm} ${fqdn} ${size}G ${ip} ${mac} ${dns} bridge=${bridge}"
         anmt "${vm} cpu=${cpu} memory=${memory} user=${user} ${domain}"
-        anmt "${vm_manage} create -M \"${mac}\" -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
+        anmt "${vm_manage} create -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
         ${vm_manage} create \
             -c "${cpu}" \
             -d "${size}" \
@@ -97,22 +105,29 @@ for vm in $vms; do
             ${vm}
         if [[ "$?" != "0" ]]; then
             err "failed creating ${env_name}:${vm} with: ${vm_manage} create ${vm}"
-            err "sudo ${vm_manage} create -M \"${mac}\" -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
+            err "${vm_manage} create -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
+            exit 1
         else
-            good "${vm_manage} create -M \"${mac}\" -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
+            good "${vm_manage} create -c ${cpu} -d ${size} -m ${memory} -M \"${mac}\" -t ${vm_type} -T \"${timezone}\" -u ${user} -D ${domain} ${vm}"
         fi
     else
         good "already have ${vm} at: ${KVM_VMS_DIR}/${vm}"
     fi
     (( vm_num++ ))
 done
+anmt "$(date) - ${env_name} - vm creation phase done - waiting for vms: ${vm} to be ready for ssh"
 
-total_sleep=30
-inf "${env_name} - sleeping for ${total_sleep} seconds"
-slp ${total_sleep}
+anmt "$(date) - ${env_name} - installing ${login_user} ssh keys: ${ssh_install_tool}"
+${ssh_install_tool}
+if [[ "$?" != "0" ]]; then
+    err "$(date) - ${env_name} - failed installing ${login_user} ssh keys: ${ssh_install_tool}"
+    exit 1
+fi
 
 anmt "building vm network file for finding the new vms"
-${vm_build_network_env}
+if [[ -e ${vm_build_network_env} ]]; then
+    ${vm_build_network_env}
+fi
 
 good "done - building disks on ${env_name} kubernetes for vms=${vms} with fqdns=${nodes} KUBECONFIG=${KUBECONFIG}"
 anmt "----------------------------------------------"

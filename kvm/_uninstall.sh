@@ -29,11 +29,6 @@ anmt "----------------------------------------------"
 anmt "${env_name} - building kubernetes vms=${vms} with fqdns=${nodes} KUBECONFIG=${KUBECONFIG} and manage tool: ${vm_manage}"
 inf ""
 
-if [[ "$(whoami)" == "root" ]]; then
-    echo "please run as root to build the disks using qemu"
-    exit 1
-fi
-
 if [[ ! -e ${KVM_IMAGES_DIR} ]]; then
     mkdir -p -m 775 ${KVM_IMAGES_DIR}
 fi
@@ -46,10 +41,10 @@ vm_num=1
 for vm in $vms; do
     mac=""
     anmt "${env_name}:${vm} - remove vm=${vm_num} with ${vm_manage}"
-    sudo ${vm_manage} remove ${vm}
+    ${vm_manage} remove ${vm}
     if [[ -e ${KVM_VMS_DIR}/${vm} ]]; then
         anmt " - deleting vm storage: ${KVM_VMS_DIR}/${vm}"
-        rm -rf ${KVM_VMS_DIR}/${vm}
+        sudo rm -rf ${KVM_VMS_DIR}/${vm}
     fi
     (( vm_num++ ))
 done

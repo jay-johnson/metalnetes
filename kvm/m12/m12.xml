@@ -1,6 +1,11 @@
-<domain type='kvm' id='162'>
+<domain type='kvm' id='95'>
   <name>m12</name>
-  <uuid>e0acc754-6197-46cd-a46a-fdd95b368d89</uuid>
+  <uuid>269eb684-d229-443d-9e94-9d0ff0248be9</uuid>
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="http://centos.org/centos/7.0"/>
+    </libosinfo:libosinfo>
+  </metadata>
   <memory unit='KiB'>17367040</memory>
   <currentMemory unit='KiB'>17367040</currentMemory>
   <vcpu placement='static'>4</vcpu>
@@ -8,7 +13,7 @@
     <partition>/machine</partition>
   </resource>
   <os>
-    <type arch='x86_64' machine='pc-i440fx-bionic'>hvm</type>
+    <type arch='x86_64' machine='pc-q35-3.0'>hvm</type>
     <boot dev='hd'/>
   </os>
   <features>
@@ -43,76 +48,94 @@
     <suspend-to-disk enabled='no'/>
   </pm>
   <devices>
-    <emulator>/usr/bin/kvm-spice</emulator>
+    <emulator>/usr/bin/qemu-kvm</emulator>
     <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
-      <source file='/data/kvm/disks/m12/m12.qcow2'/>
+      <driver name='qemu' type='raw'/>
+      <source file='/data/kvm/disks/m12/m12.raw'/>
       <backingStore/>
       <target dev='vda' bus='virtio'/>
       <alias name='virtio-disk0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
     </disk>
-    <disk type='file' device='cdrom'>
-      <driver name='qemu' type='raw'/>
-      <source file='/data/kvm/disks/m12/m12-cidata.iso'/>
-      <backingStore/>
-      <target dev='hda' bus='ide'/>
-      <readonly/>
-      <alias name='ide0-0-0'/>
-      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
-    </disk>
-    <controller type='usb' index='0' model='ich9-ehci1'>
+    <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x7'/>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
     </controller>
-    <controller type='usb' index='0' model='ich9-uhci1'>
-      <alias name='usb'/>
-      <master startport='0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0' multifunction='on'/>
-    </controller>
-    <controller type='usb' index='0' model='ich9-uhci2'>
-      <alias name='usb'/>
-      <master startport='2'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x1'/>
-    </controller>
-    <controller type='usb' index='0' model='ich9-uhci3'>
-      <alias name='usb'/>
-      <master startport='4'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x2'/>
-    </controller>
-    <controller type='pci' index='0' model='pci-root'>
-      <alias name='pci.0'/>
-    </controller>
-    <controller type='ide' index='0'>
+    <controller type='sata' index='0'>
       <alias name='ide'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>
+    </controller>
+    <controller type='pci' index='0' model='pcie-root'>
+      <alias name='pcie.0'/>
     </controller>
     <controller type='virtio-serial' index='0'>
       <alias name='virtio-serial0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>
+    </controller>
+    <controller type='pci' index='1' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='1' port='0x10'/>
+      <alias name='pci.1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>
+    </controller>
+    <controller type='pci' index='2' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='2' port='0x11'/>
+      <alias name='pci.2'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>
+    </controller>
+    <controller type='pci' index='3' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='3' port='0x12'/>
+      <alias name='pci.3'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>
+    </controller>
+    <controller type='pci' index='4' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='4' port='0x13'/>
+      <alias name='pci.4'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>
+    </controller>
+    <controller type='pci' index='5' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='5' port='0x14'/>
+      <alias name='pci.5'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>
+    </controller>
+    <controller type='pci' index='6' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='6' port='0x15'/>
+      <alias name='pci.6'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>
+    </controller>
+    <controller type='pci' index='7' model='pcie-root-port'>
+      <model name='pcie-root-port'/>
+      <target chassis='7' port='0x16'/>
+      <alias name='pci.7'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>
     </controller>
     <interface type='bridge'>
-      <mac address='52:54:01:9c:91:12'/>
+      <mac address='00:10:01:9c:91:12'/>
       <source bridge='br0'/>
       <target dev='vnet6'/>
       <model type='virtio'/>
       <alias name='net0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </interface>
     <serial type='pty'>
-      <source path='/dev/pts/8'/>
+      <source path='/dev/pts/14'/>
       <target type='isa-serial' port='0'>
         <model name='isa-serial'/>
       </target>
       <alias name='serial0'/>
     </serial>
-    <console type='pty' tty='/dev/pts/8'>
-      <source path='/dev/pts/8'/>
+    <console type='pty' tty='/dev/pts/14'>
+      <source path='/dev/pts/14'/>
       <target type='serial' port='0'/>
       <alias name='serial0'/>
     </console>
     <channel type='unix'>
-      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-162-m12/org.qemu.guest_agent.0'/>
+      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-95-m12/org.qemu.guest_agent.0'/>
       <target type='virtio' name='org.qemu.guest_agent.0' state='connected'/>
       <alias name='channel0'/>
       <address type='virtio-serial' controller='0' bus='0' port='1'/>
@@ -136,14 +159,14 @@
       <listen type='address' address='localhost'/>
       <image compression='off'/>
     </graphics>
-    <sound model='ich6'>
+    <sound model='ich9'>
       <alias name='sound0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>
     </sound>
     <video>
       <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
       <alias name='video0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>
     </video>
     <redirdev bus='usb' type='spicevmc'>
       <alias name='redir0'/>
@@ -155,12 +178,21 @@
     </redirdev>
     <memballoon model='virtio'>
       <alias name='balloon0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0'/>
+      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
     </memballoon>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+      <alias name='rng0'/>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
+    </rng>
   </devices>
+  <seclabel type='dynamic' model='selinux' relabel='yes'>
+    <label>system_u:system_r:svirt_t:s0:c164,c174</label>
+    <imagelabel>system_u:object_r:svirt_image_t:s0:c164,c174</imagelabel>
+  </seclabel>
   <seclabel type='dynamic' model='dac' relabel='yes'>
-    <label>+64055:+128</label>
-    <imagelabel>+64055:+128</imagelabel>
+    <label>+107:+107</label>
+    <imagelabel>+107:+107</imagelabel>
   </seclabel>
 </domain>
 

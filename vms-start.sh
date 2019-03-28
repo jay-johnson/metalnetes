@@ -26,6 +26,7 @@ vms="${K8_VMS}"
 env_name="${K8_ENV}"
 login_user="${LOGIN_USER}"
 debug="${METAL_DEBUG}"
+num_k8_nodes_expected=$(echo "${nodes}" | sed -e 's/ /\n/g' | wc -l)
 no_sleep="0"
 
 ########################################
@@ -78,13 +79,15 @@ for vm in $vms; do
     fi
 done
 
-inf "check login to vms: ${nodes}"
+num_nodes_online=0
+num_checks=0
+inf "waiting for nodes to support ssh login: ${nodes}"
 for fqdn in ${nodes}; do
-    test_ssh=$(ssh ${login_user}@${fqdn} "date" 2>&1)
+    test_ssh=$(ssh -o StrictHostKeyChecking=no ${login_user}@${fqdn} "date" 2>&1)
     not_done=$(echo "${test_ssh}" | grep 'ssh: ' | wc -l)
     cur_date=$(date)
     while [[ "${not_done}" != "0" ]]; do
-        inf "${cur_date} - sleeping to let ${fqdn} start"
+        inf "$(date) - sleeping before checking ${fqdn} supports ssh node=${num_nodes_online}/${num_k8_nodes_expected}"
         sleep 10
         test_ssh=$(ssh ${login_user}@${fqdn} "date" 2>&1)
         not_done=$(echo "${test_ssh}" | grep 'ssh: ' | wc -l)

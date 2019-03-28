@@ -1,0 +1,5 @@
+TYPE=Ethernet
+NAME=eno1
+DEVICE=eno1
+ONBOOT=yes
+BRIDGE=br0

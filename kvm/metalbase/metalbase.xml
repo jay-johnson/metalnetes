@@ -1,6 +1,6 @@
-<domain type='kvm' id='94'>
-  <name>m11</name>
-  <uuid>d19ca3cf-fee2-440a-8c87-f3222d4dd0fc</uuid>
+<domain type='kvm' id='92'>
+  <name>metalbase</name>
+  <uuid>cb7bc937-a2da-4011-ab01-4ce1e5a1b74d</uuid>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://centos.org/centos/7.0"/>
@@ -51,11 +51,20 @@
     <emulator>/usr/bin/qemu-kvm</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw'/>
-      <source file='/data/kvm/disks/m11/m11.raw'/>
+      <source file='/data/kvm/disks/metalbase/metalbase.raw'/>
       <backingStore/>
       <target dev='vda' bus='virtio'/>
       <alias name='virtio-disk0'/>
       <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
+    </disk>
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='/data/kvm/disks/metalbase/metalbase-cidata.iso'/>
+      <backingStore/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+      <alias name='sata0-0-0'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
     </disk>
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
@@ -115,27 +124,27 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>
     </controller>
     <interface type='bridge'>
-      <mac address='00:10:01:9c:91:11'/>
+      <mac address='00:10:01:9c:02:00'/>
       <source bridge='br0'/>
-      <target dev='vnet5'/>
+      <target dev='vnet4'/>
       <model type='virtio'/>
       <alias name='net0'/>
       <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </interface>
     <serial type='pty'>
-      <source path='/dev/pts/11'/>
+      <source path='/dev/pts/5'/>
       <target type='isa-serial' port='0'>
         <model name='isa-serial'/>
       </target>
       <alias name='serial0'/>
     </serial>
-    <console type='pty' tty='/dev/pts/11'>
-      <source path='/dev/pts/11'/>
+    <console type='pty' tty='/dev/pts/5'>
+      <source path='/dev/pts/5'/>
       <target type='serial' port='0'/>
       <alias name='serial0'/>
     </console>
     <channel type='unix'>
-      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-94-m11/org.qemu.guest_agent.0'/>
+      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/domain-92-metalbase/org.qemu.guest_agent.0'/>
       <target type='virtio' name='org.qemu.guest_agent.0' state='connected'/>
       <alias name='channel0'/>
       <address type='virtio-serial' controller='0' bus='0' port='1'/>
@@ -155,7 +164,7 @@
     <input type='keyboard' bus='ps2'>
       <alias name='input2'/>
     </input>
-    <graphics type='spice' port='5905' autoport='yes' listen='localhost'>
+    <graphics type='spice' port='5904' autoport='yes' listen='localhost'>
       <listen type='address' address='localhost'/>
       <image compression='off'/>
     </graphics>
@@ -187,8 +196,8 @@
     </rng>
   </devices>
   <seclabel type='dynamic' model='selinux' relabel='yes'>
-    <label>system_u:system_r:svirt_t:s0:c335,c988</label>
-    <imagelabel>system_u:object_r:svirt_image_t:s0:c335,c988</imagelabel>
+    <label>system_u:system_r:svirt_t:s0:c217,c882</label>
+    <imagelabel>system_u:object_r:svirt_image_t:s0:c217,c882</imagelabel>
   </seclabel>
   <seclabel type='dynamic' model='dac' relabel='yes'>
     <label>+107:+107</label>

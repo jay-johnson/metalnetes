@@ -17,9 +17,7 @@ fi
 source ${path_to_env}
 
 # this assumes the current user has root ssh access to the following hosts:
-initial_master="${K8_INITIAL_MASTER}"
-secondary_nodes="${K8_SECONDARY_MASTERS}"
-nodes="${initial_master} ${secondary_nodes}"
+nodes="${KVM_BASE_NODE}"
 env_name="${K8_ENV}"
 k8_config_dir="${K8_CONFIG_DIR}"
 k8_tools_dir="${K8_TOOLS_DIR}"
@@ -44,13 +42,13 @@ include_cluster_config="export CLUSTER_CONFIG=${k8_config_dir}/k8.env"
 
 start_date=$(date)
 anmt "---------------------------------------------------------"
-anmt "${start_date} - setting up ${env_name} on nodes: ${nodes} DNS=${k8_dns_server_1} DOMAIN=${k8_domain}"
+anmt "$(date) - ${start_date} - install base for ${env_name} on nodes: ${nodes} DNS=${k8_dns_server_1} DOMAIN=${k8_domain}"
 anmt "KUBECONFIG=${KUBECONFIG}"
 inf ""
 
 for i in $nodes; do
     anmt "${env_name}:${i} - creating directories: ${k8_config_dir} ${k8_tools_dir}"
-    ssh ${login_user}@${i} "chmod 775 /opt && mkdir -p -m 775 ${k8_config_dir} && mkdir -p -m 775 ${k8_tools_dir}"
+    ssh -o StrictHostKeyChecking=no ${login_user}@${i} "chmod 775 /opt && mkdir -p -m 775 ${k8_config_dir} && mkdir -p -m 775 ${k8_tools_dir}"
     anmt "${env_name}:${i} - copying ${local_vm_src_tools} on all nodes: ${k8_tools_dir}"
     scp -r -q ${local_vm_src_tools}/* ${login_user}@${i}:${k8_tools_dir}/
     anmt "${env_name}:${i} - copying ${local_vm_src_tools} on all nodes: ${k8_config_dir}"
@@ -98,8 +96,10 @@ if [[ "${start_registry}" == "1" ]]; then
     registry_user="${REGISTRY_USER}"
     registry_password="${REGISTRY_PASSWORD}"
     registry_address="${REGISTRY_ADDRESS}"
-    anmt "${env_name} logging into private docker registry at: ${registry_address} with nodes: ${nodes}"
     for i in $nodes; do
+        inf ""
+        anmt "$(date) - ${env_name}:$(hostname) checking /etc/resolv.conf with: ssh ${login_user}@${i} \"cat /etc/resolv.conf\""
+        ssh ${login_user}@${i} "cat /etc/resolv.conf"
         anmt "${env_name}:${i} - restarting docker"
         ssh ${login_user}@${i} "systemctl restart docker && sleep 5"
         command="echo \"${registry_password}\" | docker login --username ${registry_user} --password-stdin ${registry_address} >> /dev/null 2>&1"

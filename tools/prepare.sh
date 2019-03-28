@@ -87,7 +87,7 @@ if [[ "$(hostname)" == "${initial_node}" ]]; then
     if [[ "$?" != "0" ]]; then
         err "failed unlocking: ${env_name}:$(hostname) with: "
         err "kubectl taint nodes --all node-role.kubernetes.io/master-"
-        exit 1
+        # exit 1
     fi
     inf ""
 

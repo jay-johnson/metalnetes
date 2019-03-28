@@ -52,7 +52,7 @@ def metalnetes_test_suite():
     return test_suite
 
 
-# Don't import analysis_engine module here, since deps may not be installed
+# Don't import metalnetes module here, since deps may not be installed
 sys.path.insert(
     0,
     os.path.join(
@@ -62,11 +62,11 @@ sys.path.insert(
 setup(
     name='metalnetes',
     cmdclass={'build_py': build_py},
-    version='1.0.7',
+    version='1.0.8',
     description=(
         'Tools for managing multiple kubernetes clusters on KVM '
         '(on 3 Centos 7 vms) running on a bare metal server '
-        '(tested on Ubuntu 18.04)'
+        '(tested on Fedora 29 and Ubuntu 18.04 until 1.13.4)'
         ''),
     long_description=long_description,
     author='Jay Johnson',

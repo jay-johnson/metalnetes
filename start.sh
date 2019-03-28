@@ -109,6 +109,9 @@ anmt "vm_k8_config_dir=${k8_config_dir}"
 anmt "vm_k8_tools_dir=${k8_tools_dir}"
 anmt "-----------------------------"
 
+anmt "$(date) - ${env_name}:$(hostname) - initializing cluster access with: metal"
+metal
+
 if [[ ! -e ${helm_starter} ]]; then
     err "please run ./boot.sh from the base directory of the repository"
     err "currently in: $(pwd)"

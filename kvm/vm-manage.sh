@@ -16,6 +16,14 @@ if [[ ! -e ${path_to_env} ]]; then
 fi
 source ${path_to_env}
 
+env_name=${K8_ENV}
+os_type=${OS}
+storage_type="${KVM_STORAGE_TYPE}"
+
+if [[ "${os_type}" == "fc" ]]; then
+    export LIBVIRT_DEFAULT_URI="qemu:///system"
+fi
+
 # defined in the CLUSTER_CONFIG
 start_logger
 
@@ -24,7 +32,7 @@ start_logger
 
 # requires having kvm installed
 
-# usage: ./multihost/kvm/create-centos-vm.sh m1 /data/kvm/m1.qcow2
+# usage: ./multihost/kvm/create-centos-vm.sh m1 /data/kvm/m1.${storage_type}
 # usage: ./multihost/kvm/create-centos-vm.sh m2
 # usage: ./multihost/kvm/create-centos-vm.sh m3
 
@@ -40,6 +48,12 @@ fi
 if [[ ! -e ${KVM_VMS_DIR} ]]; then
     mkdir -p -m 777 ${KVM_VMS_DIR}
 fi
+
+if [[ "${os_type}" == "fc" ]]; then
+    # fedora 29 fails without this:
+    export LIBGUESTFS_BACKEND=direct
+fi
+anmt "--------------------------------"
 
 path_to_use="$(dirname ${path_to_env})"
 INCLUDE_SSH_ACCESS="  - /bin/echo \"no ssh set with CLUSTER_CONFIG=${path_to_env} setting K8_USER_DATA_SSH_ACCESS=${K8_USER_DATA_SSH_ACCESS}\""
@@ -171,13 +185,13 @@ function usage_subcommand ()
             printf "\n"
             printf "OPTIONS\n"
             printf "    -d SIZE     Disk size (GB)\n"
-            printf "    -f FORMAT   Disk image format       (default: qcow2)\n"
+            printf "    -f FORMAT   Disk image format       (default: ${storage_type})\n"
             printf "    -s IMAGE    Source of disk device\n"
             printf "    -t TARGET   Disk device target\n"
             printf "\n"
             printf "EXAMPLE\n"
-            printf "    $prog attach-disk -d 10 -s example-5g.qcow2 -t vdb foo\n"
-            printf "        Attach a 10GB disk device named example-5g.qcow2 to the foo guest\n"
+            printf "    $prog attach-disk -d 10 -s example-5g.${storage_type} -t vdb foo\n"
+            printf "        Attach a 10GB disk device named example-5g.${storage_type} to the foo guest\n"
             printf "        domain.\n"
             ;;
         list)
@@ -248,7 +262,7 @@ function delete_vm ()
     [[ -d ${VMDIR}/${VMNAME} ]] && DISKDIR=${VMDIR}/${VMNAME} || DISKDIR=${IMAGEDIR}/${VMNAME}
     [ -d $DISKDIR ] \
         && outputn "Deleting ${VMNAME} files" \
-        && rm -rf $DISKDIR \
+        && sudo rm -rf $DISKDIR \
         && ok
 
     if [ "${STORPOOL_EXISTS}" -eq 1 ]
@@ -458,7 +472,7 @@ function create_vm ()
     check_vmname_set
 
     # Start clean
-    [ -d "${VMDIR}/${VMNAME}" ] && rm -rf ${VMDIR}/${VMNAME}
+    [ -d "${VMDIR}/${VMNAME}" ] && sudo rm -rf ${VMDIR}/${VMNAME}
     mkdir -p ${VMDIR}/${VMNAME}
 
     pushd ${VMDIR}/${VMNAME}
@@ -628,34 +642,43 @@ _EOF_
         echo "local-hostname: ${VMNAME}";
     } > $META_DATA
 
-    outputn "Copying cloud image ($(basename ${IMAGE}))"
-    DISK=${VMNAME}.qcow2
-    cp $IMAGE $DISK && ok
-    if $RESIZE_DISK
-    then
-        outputn "Resizing the disk to $DISK_SIZE"
-        # Workaround to prevent virt-resize from renumbering partitions and breaking grub
-        # See https://bugzilla.redhat.com/show_bug.cgi?id=1472039
-        # Ubuntu will automatically grow the partition to the new size on its first boot
-        if [[ "$DISTRO" = "ubuntu1804" ]] || [[ "$DISTRO" = "amazon2" ]]
+    DISK=${VMNAME}.${storage_type}
+    if [[ "${BOOT_MODE}" != "import-base" ]]; then
+        outputn "Copying cloud image ($(basename ${IMAGE}))"
+        cp $IMAGE $DISK && ok
+        if $RESIZE_DISK
         then
-            qemu-img resize $DISK $DISK_SIZE &>> ${VMNAME}.log \
-                && ok \
-                || die "Could not resize disk."
-        else
-            echo ""
-            anmt "${env_name} running: qemu-img create -f qcow2 -o preallocation=metadata $DISK.new $DISK_SIZE"
-            qemu-img create -f qcow2 \
-                -o preallocation=metadata $DISK.new $DISK_SIZE
-            if [[ "$?" != "0" ]]; then
-                die "failed qemu-img create disk: qemu-img create -f qcow2 -o preallocation=metadata $DISK.new $DISK_SIZE"
+            outputn "Resizing the disk to $DISK_SIZE"
+            # Workaround to prevent virt-resize from renumbering partitions and breaking grub
+            # See https://bugzilla.redhat.com/show_bug.cgi?id=1472039
+            # Ubuntu will automatically grow the partition to the new size on its first boot
+            if [[ "$DISTRO" = "ubuntu1804" ]] || [[ "$DISTRO" = "amazon2" ]]
+            then
+                qemu-img resize $DISK $DISK_SIZE &>> ${VMNAME}.log \
+                    && ok \
+                    || die "Could not resize disk."
+            else
+                echo ""
+                anmt "${env_name} running: qemu-img create -f ${storage_type} -o preallocation=metadata $DISK.new $DISK_SIZE"
+                last_status=$?
+                if [[ "${storage_type}" == "qcow2" ]]; then
+                    qemu-img create -f ${storage_type} \
+                        -o preallocation=metadata $DISK.new $DISK_SIZE
+                    last_status=$?
+                else
+                    qemu-img create -f ${storage_type} \
+                        $DISK.new $DISK_SIZE
+                fi
+                if [[ "$?" != "0" ]]; then
+                    die "failed qemu-img create disk: qemu-img create -f ${storage_type} -o preallocation=metadata $DISK.new $DISK_SIZE"
+                fi
+                anmt "${env_name} running: sudo virt-resize --quiet --expand /dev/sda1 $DISK $DISK.new"
+                virt-resize --expand /dev/sda1 $DISK $DISK.new
+                if [[ "$?" != "0" ]]; then
+                    die "failed virt-resize disk: virt-resize --quiet --expand /dev/sda1 $DISK $DISK.new"
+                fi
+                mv $DISK.new $DISK
             fi
-            anmt "${env_name} running: sudo virt-resize --quiet --expand /dev/sda1 $DISK $DISK.new"
-            sudo virt-resize --quiet --expand /dev/sda1 $DISK $DISK.new
-            if [[ "$?" != "0" ]]; then
-                die "failed virt-resize disk: virt-resize --quiet --expand /dev/sda1 $DISK $DISK.new"
-            fi
-            mv $DISK.new $DISK
         fi
     fi
 
@@ -686,11 +709,17 @@ _EOF_
     fi
 
     # Create new storage pool for new VM
-    (virsh pool-create-as \
+    echo ""
+    anmt "$(date) - creating pool for vm ${VMNAME}"
+    anmt "virsh pool-create-as --name ${VMNAME} --type dir --target ${VMDIR}/${VMNAME} &>> ${VMNAME}.log"
+    virsh pool-create-as \
         --name ${VMNAME} \
         --type dir \
-        --target ${VMDIR}/${VMNAME} &>> ${VMNAME}.log && ok) \
-        || die "Could not create storage pool."
+        --target ${VMDIR}/${VMNAME}
+    if [[ "$?" != "0" ]]; then
+        red "virsh pool-create-as --name ${VMNAME} --type dir --target ${VMDIR}/${VMNAME} &>> ${VMNAME}.log"
+        die "Could not create storage pool."
+    fi
 
     # Add custom MAC Address if specified
     if [ -z "${MACADDRESS}" ]
@@ -700,44 +729,92 @@ _EOF_
         NETWORK_PARAMS="bridge=${BRIDGE},model=virtio,mac=${MACADDRESS}"
     fi
 
-    if [ "${VERBOSE}" -eq 1 ]
-    then
-        output "Installing the domain with the following command"
-        printf "    virt-install \\ \n"
-        printf "      --import \\ \n"
-        printf "      --name ${VMNAME} \\ \n"
-        printf "      --memory ${MEMORY} \\ \n"
-        printf "      --vcpus ${CPUS} \\ \n"
-        printf "      --cpu ${FEATURE} \\ \n"
-        printf "      --disk ${DISK},format=qcow2,bus=virtio \\ \n"
-        printf "      --disk ${CI_ISO},device=cdrom \\ \n"
-        printf "      --network ${NETWORK_PARAMS} \\ \n"
-        printf "      --os-type=linux \\ \n"
-        printf "      --os-variant=${OS_VARIANT} \\ \n"
-        printf "      --graphics ${GRAPHICS},port=${PORT},listen=localhost \\ \n"
-        printf "      --noautoconsole  \n"
+    if [[ "${BOOT_MODE}" != "import-base" ]]; then
+        if [ "${VERBOSE}" -eq 1 ]
+        then
+            output "Installing the domain with the following command"
+            printf "    virt-install \\ \n"
+            printf "      --import \\ \n"
+            printf "      --name ${VMNAME} \\ \n"
+            printf "      --memory ${MEMORY} \\ \n"
+            printf "      --vcpus ${CPUS} \\ \n"
+            printf "      --cpu ${FEATURE} \\ \n"
+            printf "      --disk ${DISK},format=${storage_type},bus=virtio \\ \n"
+            printf "      --disk ${CI_ISO},device=cdrom \\ \n"
+            printf "      --network ${NETWORK_PARAMS} \\ \n"
+            printf "      --os-type=linux \\ \n"
+            printf "      --os-variant=${OS_VARIANT} \\ \n"
+            printf "      --graphics ${GRAPHICS},port=${PORT},listen=localhost \\ \n"
+            printf "      --noautoconsole  \n"
+        else
+            outputn "Installing the domain"
+        fi
+
+        # Call virt-install to import the cloud image and create a new VM
+        yellow "$(date) - $(pwd) - virt-install --import --name ${VMNAME} --memory ${MEMORY} --vcpus ${CPUS} --cpu ${FEATURE} --disk ${DISK},format=${storage_type},bus=virtio --disk ${CI_ISO},device=cdrom --network ${NETWORK_PARAMS} --os-type=linux --os-variant=${OS_VARIANT} --graphics ${GRAPHICS},port=${PORT},listen=localhost --noautoconsole"
+        virt-install --import \
+            --name ${VMNAME} \
+            --memory ${MEMORY} \
+            --vcpus ${CPUS} \
+            --cpu ${FEATURE} \
+            --disk ${DISK},format=${storage_type},bus=virtio \
+            --disk ${CI_ISO},device=cdrom \
+            --network ${NETWORK_PARAMS} \
+            --os-type=linux \
+            --os-variant=${OS_VARIANT} \
+            --graphics ${GRAPHICS},port=${PORT},listen=localhost \
+            --noautoconsole
+        if [[ "$?" != "0" ]]; then
+            die "Could not create domain with virt-install."
+        fi
     else
-        outputn "Installing the domain"
-    fi
+        new_dir=$(dirname ${DISK})
+        if [[ ! -e ${new_dir} ]]; then
+            mkdir -p -m 775 ${new_dir}
+        fi
+        anmt "$(date) - BOOT_MODE=${BOOT_MODE} - copying existing base: ${KVM_BASE_IMAGE_PATH} for: ${env_name}:${VMNAME} to disk location: ${DISK}"
+        cp ${KVM_BASE_IMAGE_PATH} $DISK
+        if [[ ! -e $DISK ]]; then
+            err "$(date) - failed copying existing base: ${KVM_BASE_IMAGE_PATH} for: ${env_name}:${VMNAME} to disk location: ${DISK}"
+            exit 1
+        fi
+        anmt "$(date) - creating ${VMNAME} existing base: ${KVM_BASE_IMAGE_PATH} for: ${env_name}:${VMNAME} disk: ${DISK}"
+        if [ "${VERBOSE}" -eq 1 ]
+        then
+            output "Installing the domain with the following command"
+            printf "    virt-install \\ \n"
+            printf "      --import \\ \n"
+            printf "      --name ${VMNAME} \\ \n"
+            printf "      --memory ${MEMORY} \\ \n"
+            printf "      --vcpus ${CPUS} \\ \n"
+            printf "      --cpu ${FEATURE} \\ \n"
+            printf "      --disk ${DISK},format=${storage_type},bus=virtio \\ \n"
+            printf "      --network ${NETWORK_PARAMS} \\ \n"
+            printf "      --os-type=linux \\ \n"
+            printf "      --os-variant=${OS_VARIANT} \\ \n"
+            printf "      --graphics ${GRAPHICS},port=${PORT},listen=localhost \\ \n"
+            printf "      --noautoconsole  \n"
+        else
+            outputn "Installing the domain"
+        fi
 
-    # Call virt-install to import the cloud image and create a new VM
-    yellow "virt-install --import --name ${VMNAME} --memory ${MEMORY} --vcpus ${CPUS} --cpu ${FEATURE} --disk ${DISK},format=qcow2,bus=virtio --disk ${CI_ISO},device=cdrom --network ${NETWORK_PARAMS} --os-type=linux --os-variant=${OS_VARIANT} --graphics ${GRAPHICS},port=${PORT},listen=localhost --noautoconsole"
-    virt-install --import \
-        --name ${VMNAME} \
-        --memory ${MEMORY} \
-        --vcpus ${CPUS} \
-        --cpu ${FEATURE} \
-        --disk ${DISK},format=qcow2,bus=virtio \
-        --disk ${CI_ISO},device=cdrom \
-        --network ${NETWORK_PARAMS} \
-        --os-type=linux \
-        --os-variant=${OS_VARIANT} \
-        --graphics ${GRAPHICS},port=${PORT},listen=localhost \
-        --noautoconsole
-    if [[ "$?" != "0" ]]; then
-        die "Could not create domain with virt-install."
+        # Call virt-install to import the cloud image and create a new VM
+        yellow "$(date) - $(pwd) - virt-install --import --name ${VMNAME} --memory ${MEMORY} --vcpus ${CPUS} --cpu ${FEATURE} --disk ${DISK},format=${storage_type},bus=virtio --network ${NETWORK_PARAMS} --os-type=linux --os-variant=${OS_VARIANT} --graphics ${GRAPHICS},port=${PORT},listen=localhost --noautoconsole"
+        virt-install --import \
+            --name ${VMNAME} \
+            --memory ${MEMORY} \
+            --vcpus ${CPUS} \
+            --cpu ${FEATURE} \
+            --disk ${DISK},format=${storage_type},bus=virtio \
+            --network ${NETWORK_PARAMS} \
+            --os-type=linux \
+            --os-variant=${OS_VARIANT} \
+            --graphics ${GRAPHICS},port=${PORT},listen=localhost \
+            --noautoconsole
+        if [[ "$?" != "0" ]]; then
+            die "Could not create domain with virt-install for importing from base: ${KVM_BASE_IMAGE_PATH}."
+        fi
     fi
-
     virsh dominfo ${VMNAME} &>> ${VMNAME}.log
 
     # Enable autostart if true
@@ -751,11 +828,15 @@ _EOF_
     fi
 
     # Eject cdrom
-    virsh change-media ${VMNAME} hda --eject --config &>> ${VMNAME}.log
-
-    # Remove the unnecessary cloud init files
-    outputn "Cleaning up cloud-init files"
-    rm $USER_DATA $META_DATA $CI_ISO && ok
+    media_device_name=$(virsh dumpxml ${VMNAME} | grep -A 5 cdrom  | grep dev | sed -e "s/'/ /g"| grep target | awk '{print $3}')
+    if [[ "${media_device_name}" != "" ]]; then
+        anmt "ejecting cdrom"
+        anmt "virsh change-media ${VMNAME} ${media_device_name} --eject --config"
+        virsh change-media ${VMNAME} ${media_device_name} --eject --config
+        # Remove the unnecessary cloud init files
+        anmt "Cleaning up cloud-init files"
+        sudo rm $USER_DATA $META_DATA $CI_ISO && ok
+    fi
 
     if [ -f "/var/lib/libvirt/dnsmasq/${BRIDGE}.status" ]
     then
@@ -942,7 +1023,7 @@ function create ()
             remove ${VMNAME}
         else
             echo -e "\nNot overwriting ${VMNAME}. Exiting..."
-            exit 1
+            exit 0
         fi
     fi
 
@@ -962,7 +1043,7 @@ function create ()
 function attach-disk ()
 {
     # Set default variables
-    FORMAT=qcow2
+    FORMAT=${storage_type}
 
     # Parse command line arguments
     while getopts ":d:f:ps:t:h" opt

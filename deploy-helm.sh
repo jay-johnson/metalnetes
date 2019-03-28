@@ -23,6 +23,10 @@ anmt "deploying helm locally for ${env_name} - these tools use helm to control k
 anmt "details on helm: https://helm.sh/docs/"
 inf ""
 
+# install helm if not found on the host
+export HELM_INSTALL_IF_NOT_FOUND_USING_CURL="1"
+test_helm_installed
+
 inf "checking if helm is running already"
 helm_running=$(ps auwwx | grep helm | grep serve | wc -l)
 if [[ "${helm_running}" == "0" ]]; then

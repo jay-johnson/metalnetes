@@ -1,74 +1,127 @@
 Metalnetes
 ==========
 
-Tools for managing multiple kubernetes **1.13.4** clusters on KVM (3 Centos 7 vms) running on a bare metal server (tested on Ubuntu 18.04).
+Tools for managing multiple Kubernetes **1.14** clusters on KVM (3 CentOS 7 VM) running on a bare metal server running Fedora 29 (also tested on Ubuntu 18.04 until 1.13). Use this repo if you want to create, destroy and manage native Kubernetes clusters. It is a full installer for taking a brand new server up to speed using just bash and environment variables.
 
-.. image:: https://i.imgur.com/8uvAcgF.png
-
-This will install:
-
-- Kubernetes cluster deployed 3 CentOS 7 VMs using 100 GB with static IPs and installed using KVM
-- Rook Ceph Storage Cluster for Persistent Volumes
-- Grafana + Prometheus
-- Optional - Stock Analysis Engine that includes:
-    - Minio (on-premise S3)
-    - Redis cluster
-    - Jupyter
-- SSH access
+.. image:: https://i.imgur.com/awLwim1.png
 
 Getting Started
 ---------------
 
+This `repo <https://github.com/jay-johnson/metalnetes>`__ automates:
+
+- installing many rpms, systems and tools to prepare a bare metal server (on Fedora 29) to host multiple Kubernetes clusters
+- deploying Kubernetes clusters on 3 CentOS 7 VMs
+    - each VM has 100 GB, 4 cpu cores, 16 GB ram, and auto-configured for static IP assignment from env vars
+- hosting VMs using KVM which requires access to the server's hypervisor (running this in a vm will not work)
+- deploying a Rook Ceph storage cluster for Kubernetes persistent volumes
+- Optional - `Stock Analysis Engine <https://stock-analysis-engine.readthedocs.io/en/latest/>`__ that includes:
+    - Minio (on-premise s3)
+    - Redis cluster
+    - Jupyter
+    - Grafana + Prometheus for monitoring (required for ceph cluster monitoring)
+- Installs a local dns server (named) with working example for mapping VM static ips to urls that a browser can use with any Kubernetes nginx ingress endpoint
+- ssh access for manually fixing a VM after deployment
+
+Fedora Bare Metal Install Guide
+===============================
+
+Server Resource Requirements
+----------------------------
+
+- minimum 50 GB RAM
+- minimum 12 cpu cores
+- 500 GB hdd space for each cluster (400 GB if you do not want to use base images and slow down each cluster deployment)
+
+Clone
+-----
+
 ::
 
-    git clone https://github.com/jay-johnson/metalnetes.git metalnetes
+    git clone https://github.com/jay-johnson/metalnetes.git
     cd metalnetes
 
-Start VMs and Kubernetes Cluster
---------------------------------
+Edit Cluster Configuration
+==========================
+
+Please edit the default `Cluster Config k8.env <https://github.com/jay-johnson/metalnetes/blob/master/k8.env>` as needed
+
+Launch Checklist
+----------------
+
+Uninstalling and reinstalling clusters is not a slow process, and it helps to take a moment to review the VM's networking, Kubernetes cluster deployment, and KVM configuration before starting or testing a new idea for your next cluster deployment:
+
+- KVM
+  - `K8_VMS` - short VM names for showing in ``virsh list``
+  - `K8_DOMAIN` - search domain for cluster ``example.com``
+  - `K8_INITIAL_MASTER` - initial fqdn to set ``m10.example.com``
+  - `K8_SECONDARY_MASTERS` - additional fqdns to set ``m11.example.com m12.example.com`` and space separated
+- Networking
+  - Confirm VM IP Addresses
+  - Confirm VM Node FQDNs
+  - Confirm VM MAC Addresses
+- Confirm User For Private Docker Registry
+- Confirm User For SSH Access to VMs
+- Confirm VM Storage (100 GB harddrives using raw image format)
+- Confirm Cluster Storage (rook-ceph by default)
+- Confirm Ingress (nginx by default)
+- Confirm Bridge (nginx by default)
+- Node Resources
+  - CPU
+  - Memory
+
+Start Install
+=============
+
+Change to root and start the Fedora bare metal server installer:
 
 ::
 
+    sudo su
+    ./fedora/server-install.sh
+
+Install Bridge
+==============
+
+This will install a bridge network device called ``br0`` from a network device ``eno1``. This ``br0`` bridge is used by KVM as a shared networking device for all VMs in all Kubernetes clusters.
+
+::
+
+    ./fedora/install-bridge.sh
+
+I am not sure this is required, but I reboot the server at this point. This ensures the OS reboots correctly before creating any VMs, and I can confirm the ``br0`` bridge shows up after a clean restart using ``ifconfig -a | grep br0`` or ``nmcli dev | grep br0``.
+
+Start the Kubernetes Cluster
+============================
+
+Boot your cluster as your user (which should have KVM access). The `boot.sh <https://github.com/jay-johnson/metalnetes/blob/master/boot.sh>`__ uses a base VM to bootstrap and speed up future deployments. Once the base VM is built, it will copy and launch 3 VMs (from the base) and install the latest Kubernetes build in all VMs. Once installed and running the 2nd and 3rd nodes join the 1st node to initialize the cluster. After initializing the cluster, helm and tiller will install and a rook-ceph storage layer will be deployed for persisting your data in volumes:
+
+.. note:: Initial benchmarks take around 30 minutes to build all VMs and bring a new cluster online. Cleaning and restarting the cluster does not take nearly as long as creating VMs for a new cluster. Also the first time running ``./boot.sh`` will take the longest because it builds a shared base VM image to decrease future cluster deploy time.
+
+::
+
+    # go to the base of the repo
+    cd ..
+    # load your edited k8.env Cluster Config
+    source k8.env
+    # start
     ./boot.sh
+
+For help with issues please refer to the `FAQ <https://github.com/jay-johnson/metalnetes#faq>`__
 
 View Kubernetes Nodes
 ---------------------
+
+Once it finishes you can view your new cluster nodes with:
 
 ::
 
     ./tools/show-nodes.sh
 
-Monitoring the Kubernetes Cluster
-=================================
-
-Log in to Grafana from a browser:
-
-- Username: **trex**
-- Password: **123321**
-
-https://grafana.example.com
-
-Grafana comes ready-to-go with these starting dashboards:
-
-View Kubernetes Pods in Grafana
--------------------------------
-
-.. image:: https://i.imgur.com/GHo7dbd.png
-
-View Rook Ceph Cluster in Grafana
-----------------------------------
-
-.. image:: https://i.imgur.com/wptrQW2.png
-
-View Redis Cluster in Grafana
------------------------------
-
-.. image:: https://i.imgur.com/kegYzXZ.png
-
 Changing Between Kubernetes Clusters
 ====================================
 
-If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``prod_k8.env`` then you can then quickly toggle between clusters using:
+If you create a new ``k8.env`` file for each cluster, like ``dev_k8.env`` and ``prod_k8.env`` then you can then quickly toggle between clusters using:
 
 #.  Load ``dev`` Cluster Config file
 
@@ -94,72 +147,34 @@ If you create new ``k8.env`` files for each cluster, like ``dev_k8.env`` and ``p
 
         metal
 
-Customize VMs and Manage Kubernetes Deployments
-===============================================
+Customizing the Kubernetes Cluster
+==================================
 
-These are the steps the automated ``./boot.sh`` runs in order for customizing and debugging your kubernetes deployment.
+If you are looking to swap out parts of the deployment, please ensure the hosting server has a replacement in place for these bare minimum components:
 
-Create VMs Using KVM on Ubuntu
-==============================
+- a dns server that can host the ``example.com`` zone
+- access to a docker-ce daemon (latest stable)
+- a private docker registry
+- KVM (requires **hypervisor** access)
+- a network device that supports static bridging for KVM (please review the ``centos/install-network-device.sh`` for examples)
+- default static network ip assignment from a router or switch that can map a VM's MAC address to a static ip address that the dns server can map to for helping browsers access nginx ingress endpoints
+- access to arp-scan tool for detecting when each VM is ready for ssh scripting using dns name resolution
 
-#.  Install `KVM <https://help.ubuntu.com/community/KVM/Installation>`__ and `arp-scan <https://github.com/royhills/arp-scan>`__ to find each VM's ip address
+Before starting a second cluster there are some deployment sections to change from the default ``k8.env`` Cluster Config file.
 
-    This guide was written using an Ubuntu bare metal server, but it is just KVM under the hood. Please feel free to open a PR if you know the commands for CentOS, Fedora or RHEL and I will add them.
-
-    ::
-
-        cd kvm
-        sudo ./install-kvm.sh
-
-#.  Start VMs
-
-    This will create 3 vms by default and uses an `internal fork from the giovtorres/kvm-install-vm script <https://github.com/giovtorres/kvm-install-vm/blob/master/kvm-install-vm>`__. To provision vm disks using ``qemu-img``, this tool will prompt for ``root`` access when needed.
-
-    ::
-
-        ./start-cluster-vms.sh
-
-#.  Assign IPs to Router or DNS server
-
-    This tool uses ``arp-scan`` to find all active ip addresses on the network bridge. With this list, the tool then looks up each vm's ip by the MAC address, and it requires ``root`` privileges.
-
-    ::
-
-        ./find-vms-on-bridge.sh
-
-    Alternatively you can set ``/etc/hosts`` too:
-
-    ::
-
-        192.168.0.110   m10 m10.example.com master10.example.com
-        192.168.0.111   m11 m11.example.com master11.example.com
-        192.168.0.112   m12 m12.example.com master12.example.com
-
-#.  Bootstap Nodes
-
-    Once the vm's are routable by their fqdn (e.g. ``m10.example.com``), you can use the bootstrap tool to start preparing the cluster nodes. This also confirms each vm works with automated ssh access.
-
-    ::
-
-        ./bootstrap-new-vms.sh
-
-Install Kubernetes on CentOS 7
-==============================
-
-Configuration
--------------
-
-Now that the VMs are ready you can use the `k8.env CLUSTER_CONFIG example file <https://github.com/jay-johnson/metalnetes/tree/master/k8.env>`__ for managing kubernetes clusters on your own vms. This step becomes the starting point for start, restarting and managing clusters.
-
-::
-
-    cd ..
-    ./install-centos-vms.sh
+Please review these sections to prevent debugging collision-related issues:
 
 VM and Kubernetes Node Configuration
 ------------------------------------
 
 - `VM names, Cluster Nodes, Node Labels, Cluster Tools section <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L96-L194>`__
+
+**Considerations and Deployment Constraints**
+
+- ``K8_ENV`` must be a unique name for the cluster (``dev`` vs ``prod`` for example)
+- VM names need to be unique (and on the dns server with fqdn: ``VM_NAME.example.com`` as the default naming convention
+- IPs must be unique (or the dns server will have problems)
+- MAC addressess must be unique
 
 Helm and Tiller Configuration
 -----------------------------
@@ -168,6 +183,10 @@ Helm and Tiller Configuration
 
 Cluster Storage Configuation
 ----------------------------
+
+**Considerations and Deployment Constraints**
+
+- Operator redundancy
 
 - `Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L57-L65>`__
 - `Additional Block Devices per VM <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L178-L188>`__
@@ -183,10 +202,10 @@ Please export the address to your private docker registy before deploying with f
 
 - `Registry <https://github.com/jay-johnson/metalnetes/blob/34c0eabf5f7007056a4823f5c4ea760aea7c8e6e/k8.env#L35-L46>`__
 
-Start Kubernetes Cluster
-========================
+Managing a Running Kubernetes Cluster
+=====================================
 
-With 3 vms setup using the `install-centos-vms.sh <https://github.com/jay-johnson/metalnetes/tree/master/install-centos-vms.sh>`__ follow these steps to stand up and tear down a kubernetes cluster.
+Run these steps to manage a running kubernetes cluster.
 
 Load the CLUSTER_CONFIG environment
 -----------------------------------
@@ -220,7 +239,7 @@ Check Kubernetes Nodes
 Cluster Join Tool
 =================
 
-If you want to reboot vms and have the nodes re-join and rebuild the kubernetes cluster use:
+If you want to reboot VMs and have the nodes re-join and rebuild the Kubernetes cluster use:
 
 ::
 
@@ -283,7 +302,7 @@ Deploy tiller:
 (Optional Validation) - Deploy Stock Analysis Engine
 ====================================================
 
-This repository was created after trying to decouple my `AI kubernetes cluster for analyzing network traffic <https://github.com/jay-johnson/deploy-to-kubernetes>`__ and my `Stock Analysis Engine (ae) that uses many deep neural networks to predict future stock prices during live-trading hours <https://github.com/AlgoTraders/stock-analysis-engine>`__ from using the same kubernetes cluster. Additionally with the speed ae is moving, I am looking to keep trying new high availablity solutions and configurations to ensure the intraday data collection never dies (hopefully out of the box too!).
+This repository was created after trying to decouple the `AI Kubernetes cluster for analyzing network traffic <https://github.com/jay-johnson/deploy-to-kubernetes>`__ and the `Stock Analysis Engine (ae) that uses many deep neural networks to predict future stock prices during live-trading hours <https://github.com/AlgoTraders/stock-analysis-engine>`__ from using the same Kubernetes cluster. Additionally with the speed ae is moving, I am looking to keep trying new high availablity solutions and configurations to ensure the intraday data collection never dies (hopefully out of the box too!).
 
 Deploy AE
 ---------
@@ -315,6 +334,35 @@ Redeploying Using Helm
 
         ./ae/start.sh
 
+Monitoring the Kubernetes Cluster
+---------------------------------
+
+.. note:: Grafana will only deploy if monitoring is enabled when running ``./deploy-ae.sh`` or if you run ``./ae/monitor-start.sh``.
+
+Log in to Grafana from a browser:
+
+- Username: **trex**
+- Password: **123321**
+
+https://grafana.example.com
+
+Grafana comes ready-to-go with these starting dashboards:
+
+View Kubernetes Pods in Grafana
+-------------------------------
+
+.. image:: https://i.imgur.com/GHo7dbd.png
+
+View Rook Ceph Cluster in Grafana
+----------------------------------
+
+.. image:: https://i.imgur.com/wptrQW2.png
+
+View Redis Cluster in Grafana
+-----------------------------
+
+.. image:: https://i.imgur.com/kegYzXZ.png
+
 Uninstall AE
 ------------
 
@@ -328,7 +376,7 @@ Please wait for the Persistent Volume Claims to be deleted
 
     kubetl get pvc -n ae
 
-.. note:: The redis pvc ``redis-data-ae-redis-master-0`` requires being manually deleted
+.. warning:: The Redis pvc ``redis-data-ae-redis-master-0`` must be manually deleted to prevent issues with redeployments after an uninstall
     ::
 
         kubectl -n ae delete pvc redis-data-ae-redis-master-0
@@ -340,11 +388,6 @@ Delete Cluster VMs
 
     ./kvm/_uninstall.sh
 
-Background and Notes
-====================
-
-Customize the vm install steps done during boot up using the `cloud-init-script.sh <https://github.com/jay-johnson/metalnetes/tree/master/install-centos-vms.sh>`__.
-
 License
 =======
 
@@ -353,7 +396,7 @@ Apache 2.0 - Please refer to the `LICENSE <https://github.com/jay-johnson/metaln
 FAQ
 ===
 
-What IP did my vms get?
+What IP did my VMs get?
 -----------------------
 
 Find VMs by MAC address using the ``K8_VM_BRIDGE`` bridge device using:
@@ -410,3 +453,56 @@ Source the ``k8.env`` Cluster Config file:
     ae-minio     	1       	Thu Mar 21 05:49:40 2019	DEPLOYED	minio-2.4.7     	2019-02-12 	ae
     ae-prometheus	1       	Thu Mar 21 05:57:16 2019	DEPLOYED	prometheus-8.9.0	2.8.0      	ae
     ae-redis     	1       	Thu Mar 21 05:49:42 2019	DEPLOYED	redis-6.4.2     	4.0.14     	ae
+
+Comparing Repo Example Files vs Yours
+-------------------------------------
+
+When starting a server from scratch, I like to compare notes from previous builds. I have uploaded the Fedora 29 server's files to help debug common initial installer-type issues. Let me know if you think another one should be added to help others. Please take a moment to compare your server's configured files after the install finishes by looking at the `fedora/etc directory` with directory structure and notes:
+
+::
+
+    tree fedora/etc/
+    fedora/etc/
+    ├── dnsmasq.conf # dnsmasq that was conflicting with named later (http://www.thekelleys.org.uk/dnsmasq/doc.html) - dnsqmasq was disabled and stopped on the server using systemctl
+    ├── docker
+    │   └── daemon.json # examples for setting up your private docker registry
+    ├── named.conf
+    ├── NetworkManager
+    │   └── NetworkManager.conf # this is enabled and running using systemctl
+    ├── resolv.conf # locked down with: sudo chattr +i /etc/resolv.conf
+    ├── resolv.dnsmasq
+    ├── ssh
+    │   └── sshd_config # initial ssh config for logging in remotely as fast as possible - please lock this down after install finishes
+    ├── sysconfig
+    │   └── network-scripts
+    │       ├── ifcfg-br0 # bridge network device - required for persisting through a reboot
+    │       └── ifcfg-eno1 # server network device - required for persisting through a reboot
+    └── var
+        └── named
+            └── example.com.zone # dns zone
+
+How do I know when my VMs have an IP address?
+---------------------------------------------
+
+I use this bash alias in my ``~/.bashrc`` to monitor VMs on the ``br0`` device:
+
+::
+
+    showips() {
+        watch -n1 'sudo arp-scan -q -l --interface br0 | sort'
+    }
+
+Then ``source ~/.bashrc`` and then run: ``showips`` to watch everything on the ``br0`` bridge networking device with each IP's MAC address. (Exit with ``ctrl + c``)
+
+Manually Fix Fedora /etc/resolv.conf
+------------------------------------
+
+NetworkManager and dnsmasq had lots of conflicts initially. I used this method to **lock down** ``/etc/resolv.conf`` to ensure the dns routing was stable after reboots.
+
+::
+
+    sudo su
+    nmcli connection modify eth0 ipv4.dns "192.168.0.100 8.8.8.8 8.8.4.4"
+    vi /etc/resolv.conf
+    chattr +i /etc/resolv.conf
+    systemctl restart NetworkManager
