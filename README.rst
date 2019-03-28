@@ -12,16 +12,16 @@ This `repo <https://github.com/jay-johnson/metalnetes>`__ automates:
 
 - installing many rpms, systems and tools to prepare a bare metal server (on Fedora 29) to host multiple Kubernetes clusters
 - deploying Kubernetes clusters on 3 CentOS 7 VMs
-    - each VM has 100 GB, 4 cpu cores, 16 GB ram, and auto-configured for static IP assignment from env vars
+  - each VM has 100 GB, 4 cpu cores, 16 GB ram, and auto-configured for static IP assignment from env vars
 - hosting VMs using KVM which requires access to the server's hypervisor (running this in a vm will not work)
 - deploying a Rook Ceph storage cluster for Kubernetes persistent volumes
-- Optional - `Stock Analysis Engine <https://stock-analysis-engine.readthedocs.io/en/latest/>`__ that includes:
-    - Minio (on-premise s3)
-    - Redis cluster
-    - Jupyter
-    - Grafana + Prometheus for monitoring (required for ceph cluster monitoring)
-- Installs a local dns server (named) with working example for mapping VM static ips to urls that a browser can use with any Kubernetes nginx ingress endpoint
+- installs a local dns server (named) with working example for mapping VM static ips to urls that a browser can use with any Kubernetes nginx ingress endpoint
 - ssh access for manually fixing a VM after deployment
+- Optional - `Stock Analysis Engine <https://stock-analysis-engine.readthedocs.io/en/latest/>`__ that includes:
+  - Minio (on-premise s3)
+  - Redis cluster
+  - Jupyter
+  - Grafana + Prometheus for monitoring (required for ceph cluster monitoring)
 
 Fedora Bare Metal Install Guide
 ===============================
