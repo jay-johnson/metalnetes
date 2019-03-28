@@ -62,6 +62,7 @@ Uninstalling and reinstalling clusters is not a slow process, and it helps to ta
     #.  `K8_INITIAL_MASTER <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L102>`__ - initial fqdn to set ``m10.example.com``
     #.  `K8_SECONDARY_MASTERS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L103>`__ - additional fqdns to set ``m11.example.com m12.example.com`` and space separated
 #.  Networking
+
     #.  `Confirm VM IP Addresses <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L105-L108>`__
     #.  `Confirm VM MAC Addresses <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L109-L111>`__
     #.  `Confirm DNS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L104>`__
