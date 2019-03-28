@@ -103,10 +103,7 @@ Boot your cluster as your user (which should have KVM access). The `boot.sh <htt
 ::
 
     # go to the base of the repo
-    cd ..
-    # load your edited k8.env Cluster Config
     source k8.env
-    # start
     ./boot.sh
 
 For help with issues please refer to the `FAQ <https://github.com/jay-johnson/metalnetes#faq>`__
