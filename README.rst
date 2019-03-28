@@ -17,13 +17,15 @@ This `repo <https://github.com/jay-johnson/metalnetes>`__ automates:
 - deploying a Rook Ceph storage cluster for Kubernetes persistent volumes
 - installs a local dns server (named) with working example for mapping VM static ips to urls that a browser can use with any Kubernetes nginx ingress endpoint
 - ssh access for manually fixing a VM after deployment
-- optional - `Stock Analysis Engine <https://stock-analysis-engine.readthedocs.io/en/latest/>`__ that includes: Minio (on-premise s3), Redis cluster, Jupyter, Grafana + Prometheus for monitoring (required for ceph cluster monitoring)
+- optional - deploy the `Stock Analysis Engine <https://stock-analysis-engine.readthedocs.io/en/latest/>`__ which includes helm charts for running: Minio (on-premise s3), Redis cluster, Jupyter, Grafana + Prometheus for monitoring (required for ceph cluster monitoring)
 
 Fedora Bare Metal Install Guide
 ===============================
 
 Server Resource Requirements
 ----------------------------
+
+Minimum hardware specs to run 1 cluster:
 
 - minimum 50 GB RAM
 - minimum 12 cpu cores
@@ -40,31 +42,34 @@ Clone
 Edit Cluster Configuration
 ==========================
 
-Please edit the default `Cluster Config k8.env <https://github.com/jay-johnson/metalnetes/blob/master/k8.env>` as needed
+Please edit the default `Cluster Config k8.env <https://github.com/jay-johnson/metalnetes/blob/master/k8.env>`__ as needed
 
 Launch Checklist
 ----------------
 
 Uninstalling and reinstalling clusters is not a slow process, and it helps to take a moment to review the VM's networking, Kubernetes cluster deployment, and KVM configuration before starting or testing a new idea for your next cluster deployment:
 
-- KVM
-  - `K8_VMS` - short VM names for showing in ``virsh list``
-  - `K8_DOMAIN` - search domain for cluster ``example.com``
-  - `K8_INITIAL_MASTER` - initial fqdn to set ``m10.example.com``
-  - `K8_SECONDARY_MASTERS` - additional fqdns to set ``m11.example.com m12.example.com`` and space separated
-- Networking
-  - Confirm VM IP Addresses
-  - Confirm VM Node FQDNs
-  - Confirm VM MAC Addresses
-- Confirm User For Private Docker Registry
-- Confirm User For SSH Access to VMs
-- Confirm VM Storage (100 GB harddrives using raw image format)
-- Confirm Cluster Storage (rook-ceph by default)
-- Confirm Ingress (nginx by default)
-- Confirm Bridge (nginx by default)
-- Node Resources
-  - CPU
-  - Memory
+#.  `Set a name for the cluster <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L4-L8>`__
+#.  KVM
+
+    #.  `K8_VMS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L100-L103>`__ - short VM names for showing in ``virsh list``
+    #.  `K8_DOMAIN <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L101>`__ - search domain for cluster ``example.com``
+    #.  `K8_INITIAL_MASTER <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L102>`__ - initial fqdn to set ``m10.example.com``
+    #.  `K8_SECONDARY_MASTERS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L103>`__ - additional fqdns to set ``m11.example.com m12.example.com`` and space separated
+#.  Networking
+    #.  `Confirm VM IP Addresses <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L105-L108>`__
+    #.  `Confirm VM MAC Addresses <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L109-L111>`__
+    #.  `Confirm DNS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L104>`__
+#.  `Confirm User For Private Docker Registry <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L35-L39>`__
+#.  `Confirm User For SSH Access to VMs <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L118-L119>`__
+#.  `Confirm CPU Per VM (4 cores) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L116>`__
+#.  `Confirm Memory Per VM (16 GB ram) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L117>`__
+#.  `Confirm Storage Per VM (100 GB harddrives and qemu raw image format) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L114>`__
+#.  `Confirm Cluster Storage (rook-ceph by default) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L57-L60>`__
+#.  `Confirm Ingress (nginx by default) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L91-L94>`__
+#.  `Confirm Bridge (br0 by default) <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L115>`__
+#.  `Confirm Base VM IP and Mac Address <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L208-L209>`__
+#.  `Confirm Base VM Allow Query DNS CIDR <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L205>`__
 
 Start Install
 =============
