@@ -27,8 +27,8 @@ Server Resource Requirements
 
 Minimum hardware specs to run 1 cluster:
 
-- minimum 50 GB RAM
-- minimum 12 cpu cores
+- 50 GB RAM
+- 12 cpu cores
 - 500 GB hdd space for each cluster (400 GB if you do not want to use base images and slow down each cluster deployment)
 
 Clone
