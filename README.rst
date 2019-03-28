@@ -52,8 +52,8 @@ Uninstalling and reinstalling clusters is not a slow process, and it helps to ta
 #.  `Set a name for the cluster <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L4-L8>`__
 #.  KVM
 
-    #.  `K8_VMS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L100-L103>`__ - short VM names for showing in ``virsh list``
-    #.  `K8_DOMAIN <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L101>`__ - search domain for cluster ``example.com``
+    #.  `K8_VMS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L100>`__ - short VM names for showing in ``virsh list`` and must be unique
+    #.  `K8_DOMAIN <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L101>`__ - search domain for cluster ``example.com`` and must work with the dns server records and VM ip addresses
     #.  `K8_INITIAL_MASTER <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L102>`__ - initial fqdn to set ``m10.example.com``
     #.  `K8_SECONDARY_MASTERS <https://github.com/jay-johnson/metalnetes/blob/master/k8.env#L103>`__ - additional fqdns to set ``m11.example.com m12.example.com`` and space separated
 #.  Networking
