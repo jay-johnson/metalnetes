@@ -464,7 +464,7 @@ Source the ``k8.env`` Cluster Config file:
 Comparing Repo Example Files vs Yours
 -------------------------------------
 
-When starting a server from scratch, I like to compare notes from previous builds. I have uploaded the Fedora 29 server's files to help debug common initial installer-type issues. Let me know if you think another one should be added to help others. Please take a moment to compare your server's configured files after the install finishes by looking at the `fedora/etc directory <https://github.com/jay-johnson/metalnetes/tree/master/fedora/etc>`__ with directory structure and notes:
+When starting a server from scratch, I like to compare notes from previous builds. I have uploaded the Fedora 29 server's files to help debug common initial installer-type issues. Let me know if you think another one should be added to help others. Please take a moment to compare your server's configured files after the install finishes by looking at the `fedora/etc directory <https://github.com/jay-johnson/metalnetes/tree/master/fedora/etc>`__ with structure and notes:
 
 ::
 
