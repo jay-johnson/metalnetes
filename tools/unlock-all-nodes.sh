@@ -19,6 +19,7 @@ source ${path_to_env}
 env_name="${K8_ENV}"
 nodes="${K8_NODES}"
 login_user="${LOGIN_USER}"
+vm_helper="${RUN_CMD_ON_VM}"
 
 # defined in CLUSTER_CONFIG file to exit if kubernetes is not running
 k8_ready=$(is_k8_ready)
@@ -27,13 +28,12 @@ if [[ "${k8_ready}" != "ONLINE" ]]; then
     exit 1
 fi
 
-for i in ${nodes}; do
-    # anmt "- ${env_name}:${i} setting up schedulgin: ssh ${login_user}@${i} \"kubectl --ignore-not-found taint nodes --all node-role.kubernetes.io/master-\""
-    ssh ${login_user}@${i} "kubectl taint nodes --all node-role.kubernetes.io/master-"
-    # anmt "- ${env_name}:${i} checking scheduling with: kubectl describe nodes ${i} | grep -i taints"
-    # node_taint=$(kubectl describe nodes ${i} | grep -i taints)
-    # anmt "- ${env_name}:${i} scheduling: ${node_taint}"
-done
+# as of 1.14 there are now 2 taints to remove
+
+anmt "$(date) - ${env_name}:$(hostname) - removing node-role.kubernetes.io/master taint"
+kubectl taint nodes --all node-role.kubernetes.io/master-
+anmt "$(date) - ${env_name}:$(hostname) - removing node.kubernetes.io/not-ready:NoSchedule taint"
+kubectl taint nodes --all node.kubernetes.io/not-ready:NoSchedule-
 
 good "done - ${env_name} checking scheduling:"
 kubectl describe nodes | grep -i taints

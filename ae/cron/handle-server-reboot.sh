@@ -6,7 +6,8 @@
 # or put into another script that calls it without the @reboot directive
 # log=/tmp/metal-dev.log
 # echo "$(date) - cron job - start - deploying metal dev" >> ${log}
-# export METAL_BASE=/opt/ae/k8/dev && ${METAL_BASE}/ae/cron/handle-server-reboot.sh >> ${log} 2>&1
+# this assumes your repo is cloned at: /opt/metalnetes
+# export METAL_BASE=/opt/metalnetes && ${METAL_BASE}/ae/cron/handle-server-reboot.sh >> ${log} 2>&1
 # echo "$(date) - cron job - done - deploying metal dev" >> ${log}
 
 export CLUSTER_CONFIG=${METAL_BASE}/k8.env

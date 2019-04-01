@@ -58,7 +58,7 @@ storage_type="${STORAGE_TYPE}"
 remote_vm_installer="${REMOTE_VM_INSTALLER}"
 debug="${METAL_DEBUG}"
 
-include_cluster_config="export CLUSTER_CONFIG=${k8_config_dir}/k8.env"
+include_cluster_config="${RUN_ON_CLUSTER_VM}"
 ingress_type="${INGRESS_TYPE}"
 start_ingress="${START_INGRESS}"
 tool_nginx_starter="$(dirname ${path_to_env})/nginx/run.sh"
@@ -127,6 +127,9 @@ if [[ "$?" != "0" ]]; then
     err "failed deploying files to nodes: ${nodes} with: ${deploy_tool}"
     exit 1
 fi
+
+anmt "${env_name} - uninstalling rook-ceph with: ${rook_ceph_uninstall}"
+${rook_ceph_uninstall}
 
 # resetting VMs in the cluster with default: ${REPO_BASE_DIR}/tools/reset-k8-and-docker-and-cni-on-vm.sh
 

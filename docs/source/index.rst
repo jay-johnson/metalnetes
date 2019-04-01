@@ -518,7 +518,7 @@ The `rook-ceph operator <https://rook.io/docs/rook/v0.9/helm-operator.html>`__ r
 
 Here's `Rook-Ceph Troubleshooting Guide as well <https://github.com/rook/rook/blob/master/Documentation/ceph-teardown.md>`__
 
-When I hit issues like below where there are pids that never die and are outside Kubernetes, I just destroy and recreate the vms with: ``./kvm/_uninstall.sh; sleep 10; ./boot.sh``
+When I hit issues like below where there are pids that never die and are outside Kubernetes, I just destroy and recreate the VMs with: ``./kvm/_uninstall.sh; sleep 10; ./boot.sh``
 
 ::
 
