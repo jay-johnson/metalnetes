@@ -62,6 +62,7 @@ include_cluster_config="${RUN_ON_CLUSTER_VM}"
 ingress_type="${INGRESS_TYPE}"
 start_ingress="${START_INGRESS}"
 tool_nginx_starter="$(dirname ${path_to_env})/nginx/run.sh"
+delete_rook_ceph="${STORAGE_DELETE_ON_REBOOT}"
 rook_ceph_uninstall="$(dirname ${path_to_env})/rook-ceph/_uninstall.sh"
 
 for i in "$@"
@@ -128,8 +129,12 @@ if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-anmt "${env_name} - uninstalling rook-ceph with: ${rook_ceph_uninstall}"
-${rook_ceph_uninstall}
+if [[ "${delete_rook_ceph}" == "1" ]]; then
+    anmt "${env_name} - uninstalling rook-ceph with: ${rook_ceph_uninstall}"
+    ${rook_ceph_uninstall}
+else
+    warn "${env_name} - bypassing rook-ceph uninstall - please use: ${rook_ceph_uninstall} if you have issues"
+fi
 
 # resetting VMs in the cluster with default: ${REPO_BASE_DIR}/tools/reset-k8-and-docker-and-cni-on-vm.sh
 
