@@ -63,6 +63,7 @@ setup(
     name='metalnetes',
     cmdclass={'build_py': build_py},
     version='1.0.12',
+    long_description_content_type='text/x-rst',
     description=(
         'Tools for managing multiple Kubernetes clusters on KVM '
         '(on 3 Centos 7 VMs) running on a bare metal Fedora 29 server '
