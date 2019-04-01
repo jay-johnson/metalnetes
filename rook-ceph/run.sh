@@ -73,6 +73,9 @@ while [[ "${not_ready}" == "0" ]]; do
         not_ready=1
     fi
     anmt "$(date) checking pods:"
+    test_rook_agent=$(kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-ceph-agent | awk '{print $3}' | grep -i running | wc -l)
+    test_rook_op=$(kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-ceph-operator | awk '{print $3}' | grep -i running | wc -l)
+    test_rook_disc=$(kubectl -n rook-ceph-system get pod --ignore-not-found | grep rook-discover | awk '{print $3}' | grep -i running | wc -l)
     kubectl -n rook-ceph-system get po | grep rook
     warn "- rook-ceph-operator (-n rook-ceph-system) found: ${test_rook_op}"
     warn "- rook-ceph-agent (-n rook-ceph-system) found: ${test_rook_agent}"
@@ -117,6 +120,9 @@ while [[ "${not_ready}" == "0" ]]; do
         not_ready=1
     fi
     anmt "$(date) checking pods:"
+    test_ceph_mgr=$(kubectl -n rook-ceph get pod --ignore-not-found | grep rook-ceph-mgr | awk '{print $3}' | grep -i running | wc -l)
+    test_ceph_mon=$(kubectl -n rook-ceph get pod --ignore-not-found | grep rook-ceph-mon | awk '{print $3}' | grep -i running | wc -l)
+    test_ceph_osd=$(kubectl -n rook-ceph get pod --ignore-not-found | grep rook-ceph-osd | awk '{print $3}' | grep -i running | wc -l)
     kubectl -n rook-ceph get po | grep rook
     warn "- rook-ceph-mon (-n rook-ceph) found: ${test_ceph_mon}"
     warn "- rook-ceph-osd (-n rook-ceph) found: ${test_ceph_osd}"

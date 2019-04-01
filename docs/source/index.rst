@@ -511,6 +511,89 @@ NetworkManager and dnsmasq had lots of conflicts initially. I used this method t
     chattr +i /etc/resolv.conf
     systemctl restart NetworkManager
 
+What do I do when Rook-Ceph Uninstall Hangs?
+--------------------------------------------
+
+The `rook-ceph operator <https://rook.io/docs/rook/v0.9/helm-operator.html>`__ runs outside of Kubernetes on the nodes. Because this runs outside Kubernetes it can get into bad states requiring vm deletes and recreation for issues around server reboots. Please a open a PR if you know how to fix this uninstall issues.
+
+Here's `Rook-Ceph Troubleshooting Guide as well <https://github.com/rook/rook/blob/master/Documentation/ceph-teardown.md>`__
+
+When I hit issues like below where there are pids that never die and are outside Kubernetes, I just destroy and recreate the vms with: ``./kvm/_uninstall.sh; sleep 10; ./boot.sh``
+
+::
+
+    root@m11:~# ps auwwx | grep ceph | grep -v grep
+    root     14571  0.0  0.0      0     0 ?        S<   22:59   0:00 [ceph-watch-noti]
+    root     17532  0.0  0.0 123532   844 ?        D    22:59   0:00 /usr/bin/mount -t xfs -o rw,defaults /dev/rbd1 /var/lib/kubelet/plugins/ceph.rook.io/rook-ceph-system/mounts/pvc-9aaa30e5-535e-11e9-9fb8-0010019c9110
+    root     19537  0.0  0.0      0     0 ?        S<   22:58   0:00 [ceph-msgr]
+    root@m11:~# kill -9 17532
+    root@m11:~# kill -9 14571
+    root@m11:~# kill -9 19537
+    root@m11:~# kill -9 $(ps auwwx | grep ceph | grep -v grep | awk '{print $2}')
+    root@m11:~# ps auwwx | grep ceph | grep -v grep
+    root     14571  0.0  0.0      0     0 ?        S<   22:59   0:00 [ceph-watch-noti]
+    root     17532  0.0  0.0 123532   844 ?        D    22:59   0:00 /usr/bin/mount -t xfs -o rw,defaults /dev/rbd1 /var/lib/kubelet/plugins/ceph.rook.io/rook-ceph-system/mounts/pvc-9aaa30e5-535e-11e9-9fb8-0010019c9110
+    root     19537  0.0  0.0      0     0 ?        S<   22:58   0:00 [ceph-msgr]
+    root@m11:~#
+
+Kubeadm Reset or Deleting /var/lib/kubelet Hangs Forever
+--------------------------------------------------------
+
+Please review the official guide for help:
+https://kubernetes.io/docs/setup/independent/troubleshooting-kubeadm/#kubeadm-blocks-when-removing-managed-containers
+
+Here is a stack trace seen running ``dmesg``:
+
+::
+
+    [  841.081661] INFO: task alertmanager:27274 blocked for more than 120 seconds.
+    [  841.086662] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+    [  841.090801] alertmanager    D ffff9cd1d3e38640     0 27274  27158 0x00000084
+    [  841.094932] Call Trace:
+    [  841.096929]  [<ffffffffae82a621>] ? __switch_to+0x151/0x580
+    [  841.100066]  [<ffffffffaef68c49>] schedule+0x29/0x70
+    [  841.102759]  [<ffffffffaef66721>] schedule_timeout+0x221/0x2d0
+    [  841.105984]  [<ffffffffaeb47414>] ? blk_finish_plug+0x14/0x40
+    [  841.109079]  [<ffffffffaef68ffd>] wait_for_completion+0xfd/0x140
+    [  841.112144]  [<ffffffffae8d67f0>] ? wake_up_state+0x20/0x20
+    [  841.115060]  [<ffffffffc03235a3>] ? _xfs_buf_read+0x23/0x40 [xfs]
+    [  841.118251]  [<ffffffffc03234a9>] xfs_buf_submit_wait+0xf9/0x1d0 [xfs]
+    [  841.121630]  [<ffffffffc03540d1>] ? xfs_trans_read_buf_map+0x211/0x400 [xfs]
+    [  841.125157]  [<ffffffffc03235a3>] _xfs_buf_read+0x23/0x40 [xfs]
+    [  841.128128]  [<ffffffffc03236b9>] xfs_buf_read_map+0xf9/0x160 [xfs]
+    [  841.131806]  [<ffffffffc03540d1>] xfs_trans_read_buf_map+0x211/0x400 [xfs]
+    [  841.135206]  [<ffffffffc0312edd>] xfs_read_agi+0x9d/0x130 [xfs]
+    [  841.138502]  [<ffffffffc0312fa4>] xfs_ialloc_read_agi+0x34/0xd0 [xfs]
+    [  841.141801]  [<ffffffffc0313671>] xfs_ialloc_pagi_init+0x31/0x70 [xfs]
+    [  841.145038]  [<ffffffffc031383f>] xfs_ialloc_ag_select+0x18f/0x220 [xfs]
+    [  841.148463]  [<ffffffffc031395f>] xfs_dialloc+0x8f/0x280 [xfs]
+    [  841.151466]  [<ffffffffc0334131>] xfs_ialloc+0x71/0x520 [xfs]
+    [  841.154291]  [<ffffffffc03438e4>] ? xlog_grant_head_check+0x54/0x100 [xfs]
+    [  841.157607]  [<ffffffffc03366f3>] xfs_dir_ialloc+0x73/0x1f0 [xfs]
+    [  841.160588]  [<ffffffffaef67f32>] ? down_write+0x12/0x3d
+    [  841.163299]  [<ffffffffc0336d08>] xfs_create+0x498/0x750 [xfs]
+    [  841.166212]  [<ffffffffc0333cf0>] xfs_generic_create+0xd0/0x2b0 [xfs]
+    [  841.169452]  [<ffffffffc0333f04>] xfs_vn_mknod+0x14/0x20 [xfs]
+    [  841.172378]  [<ffffffffc0333f43>] xfs_vn_create+0x13/0x20 [xfs]
+    [  841.175338]  [<ffffffffaea4e9b3>] vfs_create+0xd3/0x140
+    [  841.178045]  [<ffffffffaea50a8d>] do_last+0x10cd/0x12a0
+    [  841.180818]  [<ffffffffaeb0278c>] ? selinux_file_alloc_security+0x3c/0x60
+    [  841.184077]  [<ffffffffaea52a67>] path_openat+0xd7/0x640
+    [  841.186864]  [<ffffffffaea5446d>] do_filp_open+0x4d/0xb0
+    [  841.189668]  [<ffffffffaea61af7>] ? __alloc_fd+0x47/0x170
+    [  841.192394]  [<ffffffffaea40597>] do_sys_open+0x137/0x240
+    [  841.195172]  [<ffffffffaef75d15>] ? system_call_after_swapgs+0xa2/0x146
+    [  841.198288]  [<ffffffffaea406d4>] SyS_openat+0x14/0x20
+    [  841.201016]  [<ffffffffaef75ddb>] system_call_fastpath+0x22/0x27
+    [  841.203957]  [<ffffffffaef75d21>] ? system_call_after_swapgs+0xae/0x146
+
+Additionally there are times where the user is prevented from manually deleting the ``/var/lib/kubelet/`` directory (likely due to some mounted volume) and this hangs the ssh session where even ``ctrl + c`` fails to stop it:
+
+::
+
+    root@m10:~# rm -rf /var/lib/kubelet/*
+    ^C^C^C
+
 Table of Contents
 =================
 

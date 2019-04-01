@@ -32,12 +32,11 @@ login_user="${LOGIN_USER}"
 docker_data_dir="${DOCKER_DATA_DIR}"
 deploy_ssh_key="${DEPLOY_SSH_KEY}"
 tool_node_labeler="${TOOL_NODE_LABELER}"
-remote_tool_cni_reset="${REMOTE_TOOL_CNI_RESET}"
+remote_tool_reset_vm="${REMOTE_TOOL_HARD_RESET_VM}"
 remote_tool_update_k8="${REMOTE_TOOL_UPDATE_K8}"
 remote_tool_install_go="${REMOTE_TOOL_INSTALL_GO}"
 remote_tool_install_htop="${REMOTE_TOOL_INSTALL_HTOP}"
 remote_tool_user_install_kubeconfig="${REMOTE_TOOL_USER_INSTALL_KUBECONFIG}"
-remote_tool_node_reset="${REMOTE_TOOL_NODE_RESET}"
 remote_tool_prepare_to_run_kube="${REMOTE_TOOL_VM_PREPARE}"
 tool_cni_installer="${REMOTE_TOOL_CNI_INSTALLER}"
 tool_cni_starter="${TOOL_CNI_STARTER}"
@@ -57,7 +56,6 @@ disk_1_mount_path="${VM_DISK_1_MOUNT_PATH}"
 disk_2_mount_path="${VM_DISK_2_MOUNT_PATH}"
 storage_type="${STORAGE_TYPE}"
 remote_vm_installer="${REMOTE_VM_INSTALLER}"
-delete_docker="${DELETE_DOCKER}"
 debug="${METAL_DEBUG}"
 
 include_cluster_config="export CLUSTER_CONFIG=${k8_config_dir}/k8.env"
@@ -71,8 +69,6 @@ do
     contains_equal=$(echo ${i} | grep "=")
     if [[ "${i}" == "-d" ]]; then
         debug="1"
-    elif [[ "${i}" == "deletedocker" ]]; then
-        delete_docker="1"
     elif [[ "${i}" == "noinstallgo" ]]; then
         install_go="0"
     elif [[ "${contains_equal}" != "" ]]; then
@@ -123,6 +119,8 @@ if [[ "${update_kube}" == "1" ]]; then
     inf ""
 fi
 
+# Deploy files to nodes
+
 anmt "${env_name} - deploying files with: ${deploy_tool}"
 ${deploy_tool}
 if [[ "$?" != "0" ]]; then
@@ -130,51 +128,18 @@ if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-anmt "${env_name} - uninstalling rook-ceph with: ${rook_ceph_uninstall}"
-${rook_ceph_uninstall} >> /dev/null 2>&1
+# resetting VMs in the cluster with default: ${REPO_BASE_DIR}/tools/reset-k8-and-docker-and-cni-on-vm.sh
 
-anmt "${env_name} - install cni on nodes: ${tool_cni_installer}"
+anmt "${env_name} - resetting cluster vms: ${remote_tool_reset_vm}"
 for i in $nodes; do
-    echo "installing CNI loopback plugin: ssh ${login_user}@${i} \"${include_cluster_config}; ${tool_cni_installer}"
-    ssh ${login_user}@${i} "${include_cluster_config}; ${tool_cni_installer}"
-done
-inf ""
-
-for i in $nodes; do
-    anmt "${env_name} - resetting flannel networking on ${i}: ssh ${login_user}@${i} '${include_cluster_config} && ${remote_tool_cni_reset}'"
-    ssh ${login_user}@${i} "${include_cluster_config} && ${remote_tool_cni_reset}"
+    anmt "${env_name} - resetting node: ${i} using: ssh ${login_user}@${i} '${include_cluster_config} && ${remote_tool_reset_vm}'"
+    ssh ${login_user}@${i} "${include_cluster_config} && ${remote_tool_reset_vm}"
     if [[ "$?" != "0" ]]; then
-        err "failed to reset flannel cni on ${i} using: ssh ${login_user}@${i} \"${include_cluster_config} && ${remote_tool_cni_reset}\""
+        err "failed to reset node: ${i} using: ssh ${login_user}@${i} \"${include_cluster_config} && ${remote_tool_reset_vm}\""
         exit 1
     fi
 done
 inf ""
-
-# https://blog.heptio.com/properly-resetting-your-kubeadm-bootstrapped-cluster-nodes-heptioprotip-473bd0b824aa
-for i in $nodes; do
-    anmt "resetting iptables on ${i}: ssh ${login_user}@${i} 'iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X'"
-    ssh ${login_user}@${i} "iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X"
-done
-inf ""
-
-if [[ "${delete_docker}" == "1" ]]; then
-    for i in $nodes; do
-        anmt "stopping docker on ${i}: ssh ${login_user}@${i} 'systemctl stop docker'"
-        ssh ${login_user}@${i} "systemctl stop docker"
-    done
-    inf ""
-
-    for i in $nodes; do
-        anmt "cleaning up docker directories on ${i}: ssh ${login_user}@${i} 'rm -rf ${docker_data_dir}'"
-        ssh ${login_user}@${i} "rm -rf ${docker_data_dir} >> /dev/null 2>&1"
-    done
-    inf ""
-fi
-
-for i in $nodes; do
-    anmt "starting docker on ${i}: ssh ${login_user}@${i} 'systemctl start docker; docker ps"
-    ssh ${login_user}@${i} "systemctl start docker; docker ps"
-done
 
 if [[ "${storage_type}" == "rook-ceph-block-distributed" ]]; then
     anmt "${env_name} cleaning up disks: ${disk_1_mount_path} ${disk_2_mount_path}"

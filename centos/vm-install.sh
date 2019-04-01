@@ -68,10 +68,12 @@ yum install -y \
     ca-certificates \
     curl \
     curl-devel \
+    dejavu-fonts-common \
     device-mapper-multipath \
+    ebtables \
+    ethtool \
     freetype \
     freetype-devel \
-    dejavu-fonts-common \
     gcc \
     gcc-c++ \
     gcc-gfortran \
