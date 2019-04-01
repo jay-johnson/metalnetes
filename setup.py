@@ -62,7 +62,7 @@ sys.path.insert(
 setup(
     name='metalnetes',
     cmdclass={'build_py': build_py},
-    version='1.0.13',
+    version='1.0.14',
     long_description_content_type='text/x-rst',
     description=(
         'Tools for managing multiple Kubernetes clusters on KVM '
