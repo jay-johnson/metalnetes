@@ -113,6 +113,7 @@ dnf install -y \
     python3-devel
     python3-virtualenv \
     python36 \
+    redis \
     rsyslog \
     s3cmd \
     spice-server \
